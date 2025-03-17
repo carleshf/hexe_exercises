@@ -85,43 +85,43 @@ class Main extends Sprite {
     }
 
     function drawDungeon():Void {
-		this.removeChildren(); // Clear all previous tiles
-	
-		var offsetY = 70; // Push dungeon down
-	
-		for (i in 0...GRID_SIZE) {
-			for (j in 0...GRID_SIZE) {
-				var tile = new Shape();
-				tile.graphics.beginFill(getColor(dungeon[i][j]));
-				tile.graphics.drawRect(0, 0, TILE_SIZE, TILE_SIZE);
-				tile.graphics.endFill();
-				tile.x = i * TILE_SIZE;
-				tile.y = j * TILE_SIZE + offsetY;
-				addChild(tile);
-			}
-		}
-	
-		// Draw grid
-		var grid = new Shape();
-		grid.graphics.lineStyle(1, 0x000000, 0.5);
-		
-		for (i in 0...GRID_SIZE + 1) {
-			grid.graphics.moveTo(i * TILE_SIZE, offsetY);
-			grid.graphics.lineTo(i * TILE_SIZE, GRID_SIZE * TILE_SIZE + offsetY);
-		}
-		for (j in 0...GRID_SIZE + 1) {
-			grid.graphics.moveTo(0, j * TILE_SIZE + offsetY);
-			grid.graphics.lineTo(GRID_SIZE * TILE_SIZE, j * TILE_SIZE + offsetY);
-		}
-		addChild(grid);
-	
-		// ✅ FIX: Check if buttons exist before re-adding them
-		if (increaseButton != null) addChild(increaseButton);
-		if (decreaseButton != null) addChild(decreaseButton);
-	}
-	
-	
-	
+        this.removeChildren(); // Clear all previous tiles
+    
+        var offsetY = 70; // Push dungeon down
+    
+        for (i in 0...GRID_SIZE) {
+            for (j in 0...GRID_SIZE) {
+                var tile = new Shape();
+                tile.graphics.beginFill(getColor(dungeon[i][j]));
+                tile.graphics.drawRect(0, 0, TILE_SIZE, TILE_SIZE);
+                tile.graphics.endFill();
+                tile.x = i * TILE_SIZE;
+                tile.y = j * TILE_SIZE + offsetY;
+                addChild(tile);
+            }
+        }
+    
+        // Draw grid
+        var grid = new Shape();
+        grid.graphics.lineStyle(1, 0x000000, 0.5);
+        
+        for (i in 0...GRID_SIZE + 1) {
+            grid.graphics.moveTo(i * TILE_SIZE, offsetY);
+            grid.graphics.lineTo(i * TILE_SIZE, GRID_SIZE * TILE_SIZE + offsetY);
+        }
+        for (j in 0...GRID_SIZE + 1) {
+            grid.graphics.moveTo(0, j * TILE_SIZE + offsetY);
+            grid.graphics.lineTo(GRID_SIZE * TILE_SIZE, j * TILE_SIZE + offsetY);
+        }
+        addChild(grid);
+    
+        // ✅ FIX: Check if buttons exist before re-adding them
+        if (increaseButton != null) addChild(increaseButton);
+        if (decreaseButton != null) addChild(decreaseButton);
+    }
+    
+    
+    
 
     function getColor(type:Int):UInt {
         return switch (type) {
@@ -133,17 +133,17 @@ class Main extends Sprite {
         }
     }
 
-	function createButtons():Void {
-		increaseButton = createButton("Increase Grid", 20, 20);
-		decreaseButton = createButton("Decrease Grid", 200, 20);
-	
-		increaseButton.addEventListener(MouseEvent.CLICK, function(_) adjustGridSize(1));
-		decreaseButton.addEventListener(MouseEvent.CLICK, function(_) adjustGridSize(-1));
-	
-		addChild(increaseButton);
-		addChild(decreaseButton);
-	}
-	
+    function createButtons():Void {
+        increaseButton = createButton("Increase Grid", 20, 20);
+        decreaseButton = createButton("Decrease Grid", 200, 20);
+    
+        increaseButton.addEventListener(MouseEvent.CLICK, function(_) adjustGridSize(1));
+        decreaseButton.addEventListener(MouseEvent.CLICK, function(_) adjustGridSize(-1));
+    
+        addChild(increaseButton);
+        addChild(decreaseButton);
+    }
+    
 
     function createButton(label:String, x:Float, y:Float):Sprite {
         var button = new Sprite();
