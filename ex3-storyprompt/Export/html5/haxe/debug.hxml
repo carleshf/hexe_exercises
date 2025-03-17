@@ -5,6 +5,8 @@
 --macro lime._internal.macros.DefineMacro.run()
 -cp /home/carles/.haxelib2/lime/8,2,2/src
 -D lime=8.2.2
+-cp /home/carles/.haxelib2/actuate/1,9,0/src
+-D actuate=1.9.0
 -cp Source
 -D lime-threads
 -D tools=8.2.2

@@ -892,7 +892,7 @@ ApplicationMain.main = function() {
 ApplicationMain.create = function(config) {
 	var app = new openfl_display_Application();
 	ManifestResources.init(config);
-	app.meta.h["build"] = "3";
+	app.meta.h["build"] = "4";
 	app.meta.h["company"] = "Company Name";
 	app.meta.h["file"] = "Ex3Storyprompt";
 	app.meta.h["name"] = "Ex3Storyprompt";
@@ -3386,33 +3386,68 @@ var Main = function() {
 	this.conflicts = ["must find a lost artifact","is pursued by a relentless bounty hunter","is trapped in a time loop","discovers an ancient prophecy"];
 	this.locations = ["a dark forest","an abandoned temple","a bustling space station","a frozen wasteland"];
 	this.characterNames = ["Aria","Kai","Lysander","Seraphina","Juno"];
-	var _gthis = this;
 	openfl_display_Sprite.call(this);
+	this.createBackground();
 	this.promptText = new openfl_text_TextField();
-	this.promptText.set_width(400);
+	this.promptText.set_width(500);
 	this.promptText.set_height(200);
 	this.promptText.set_x(50);
-	this.promptText.set_y(100);
-	this.promptText.set_defaultTextFormat(new openfl_text_TextFormat("_sans",18,7481127,true));
+	this.promptText.set_y(80);
+	this.promptText.set_defaultTextFormat(new openfl_text_TextFormat("_sans",22,16777215,true));
 	this.promptText.set_multiline(true);
 	this.promptText.set_wordWrap(true);
+	this.promptText.set_alpha(0);
 	this.addChild(this.promptText);
+	this.createButton();
 	this.generatePrompt();
-	this.stage.addEventListener("click",function(_) {
-		_gthis.generatePrompt();
-	});
 };
 $hxClasses["Main"] = Main;
 Main.__name__ = "Main";
 Main.__super__ = openfl_display_Sprite;
 Main.prototype = $extend(openfl_display_Sprite.prototype,{
-	generatePrompt: function() {
+	createBackground: function() {
+		this.background = new openfl_display_Shape();
+		var g = this.background.get_graphics();
+		g.beginGradientFill(openfl_display_GradientType.fromString("linear"),[2632757,3883602],[1,1],[0,255]);
+		g.drawRect(0,0,openfl_Lib.get_current().stage.stageWidth,openfl_Lib.get_current().stage.stageHeight);
+		g.endFill();
+		this.addChild(this.background);
+	}
+	,createButton: function() {
+		var _gthis = this;
+		this.button = new openfl_display_Sprite();
+		var g = this.button.get_graphics();
+		g.beginFill(16761095);
+		g.drawRoundRect(0,0,180,50,15);
+		g.endFill();
+		var buttonText = new openfl_text_TextField();
+		buttonText.set_defaultTextFormat(new openfl_text_TextFormat("_sans",18,0,true));
+		buttonText.set_text("New Story");
+		buttonText.set_width(180);
+		buttonText.set_height(50);
+		buttonText.set_selectable(false);
+		buttonText.set_x(10);
+		buttonText.set_y(10);
+		this.button.set_x((openfl_Lib.get_current().stage.stageWidth - 180) / 2);
+		this.button.set_y(300);
+		this.button.set_buttonMode(true);
+		this.button.addEventListener("click",function(_) {
+			_gthis.generatePrompt();
+		});
+		this.button.addChild(buttonText);
+		this.addChild(this.button);
+	}
+	,generatePrompt: function() {
+		var _gthis = this;
 		var character = this.getRandom(this.characterNames);
 		var location = this.getRandom(this.locations);
 		var conflict = this.getRandom(this.conflicts);
 		var action = this.getRandom(this.actions);
 		var story = character + " in " + location + " " + conflict + " " + action;
-		this.promptText.set_text(story);
+		motion_Actuate.tween(this.promptText,0.5,{ alpha : 0}).onComplete(function() {
+			_gthis.promptText.set_text(story);
+			motion_Actuate.tween(_gthis.promptText,0.5,{ alpha : 1});
+		});
 	}
 	,getRandom: function(array) {
 		return array[Std.random(array.length)];
@@ -24703,7 +24738,7 @@ var lime_utils_AssetCache = function() {
 	this.audio = new haxe_ds_StringMap();
 	this.font = new haxe_ds_StringMap();
 	this.image = new haxe_ds_StringMap();
-	this.version = 696831;
+	this.version = 674945;
 };
 $hxClasses["lime.utils.AssetCache"] = lime_utils_AssetCache;
 lime_utils_AssetCache.__name__ = "lime.utils.AssetCache";
@@ -26968,6 +27003,1729 @@ lime_utils_UInt8ClampedArray._clamp = function(_in) {
 		return _out;
 	}
 };
+var motion_actuators_IGenericActuator = function() { };
+$hxClasses["motion.actuators.IGenericActuator"] = motion_actuators_IGenericActuator;
+motion_actuators_IGenericActuator.__name__ = "motion.actuators.IGenericActuator";
+motion_actuators_IGenericActuator.__isInterface__ = true;
+motion_actuators_IGenericActuator.prototype = {
+	__class__: motion_actuators_IGenericActuator
+};
+var motion_actuators_GenericActuator = function(target,duration,properties) {
+	this._autoVisible = true;
+	this._delay = 0;
+	this._reflect = false;
+	this._repeat = 0;
+	this._reverse = false;
+	this._smartRotation = false;
+	this._snapping = false;
+	this.special = false;
+	this.target = target;
+	this.properties = properties;
+	this.duration = duration;
+	this._ease = motion_Actuate.defaultEase;
+};
+$hxClasses["motion.actuators.GenericActuator"] = motion_actuators_GenericActuator;
+motion_actuators_GenericActuator.__name__ = "motion.actuators.GenericActuator";
+motion_actuators_GenericActuator.__interfaces__ = [motion_actuators_IGenericActuator];
+motion_actuators_GenericActuator.prototype = {
+	apply: function() {
+		var _g = 0;
+		var _g1 = Reflect.fields(this.properties);
+		while(_g < _g1.length) {
+			var i = _g1[_g];
+			++_g;
+			if(Object.prototype.hasOwnProperty.call(this.target,i)) {
+				this.target[i] = Reflect.field(this.properties,i);
+			} else {
+				Reflect.setProperty(this.target,i,Reflect.field(this.properties,i));
+			}
+		}
+	}
+	,autoVisible: function(value) {
+		if(value == null) {
+			value = true;
+		}
+		this._autoVisible = value;
+		return this;
+	}
+	,callMethod: function(method,params) {
+		if(params == null) {
+			params = [];
+		}
+		return method.apply(method,params);
+	}
+	,change: function() {
+		if(this._onUpdate != null) {
+			var method = this._onUpdate;
+			var params = this._onUpdateParams;
+			if(params == null) {
+				params = [];
+			}
+			method.apply(method,params);
+		}
+	}
+	,complete: function(sendEvent) {
+		if(sendEvent == null) {
+			sendEvent = true;
+		}
+		if(sendEvent) {
+			this.change();
+			if(this._onComplete != null) {
+				var method = this._onComplete;
+				var params = this._onCompleteParams;
+				if(params == null) {
+					params = [];
+				}
+				method.apply(method,params);
+			}
+		}
+		motion_Actuate.unload(this);
+	}
+	,delay: function(duration) {
+		this._delay = duration;
+		return this;
+	}
+	,ease: function(easing) {
+		this._ease = easing;
+		return this;
+	}
+	,move: function() {
+	}
+	,onComplete: function(handler,parameters) {
+		this._onComplete = handler;
+		if(parameters == null) {
+			this._onCompleteParams = [];
+		} else {
+			this._onCompleteParams = parameters;
+		}
+		if(this.duration == 0) {
+			this.complete();
+		}
+		return this;
+	}
+	,onRepeat: function(handler,parameters) {
+		this._onRepeat = handler;
+		if(parameters == null) {
+			this._onRepeatParams = [];
+		} else {
+			this._onRepeatParams = parameters;
+		}
+		return this;
+	}
+	,onUpdate: function(handler,parameters) {
+		this._onUpdate = handler;
+		if(parameters == null) {
+			this._onUpdateParams = [];
+		} else {
+			this._onUpdateParams = parameters;
+		}
+		return this;
+	}
+	,onPause: function(handler,parameters) {
+		this._onPause = handler;
+		if(parameters == null) {
+			this._onPauseParams = [];
+		} else {
+			this._onPauseParams = parameters;
+		}
+		return this;
+	}
+	,onResume: function(handler,parameters) {
+		this._onResume = handler;
+		if(parameters == null) {
+			this._onResumeParams = [];
+		} else {
+			this._onResumeParams = parameters;
+		}
+		return this;
+	}
+	,pause: function() {
+		if(this._onPause != null) {
+			var method = this._onPause;
+			var params = this._onPauseParams;
+			if(params == null) {
+				params = [];
+			}
+			method.apply(method,params);
+		}
+	}
+	,reflect: function(value) {
+		if(value == null) {
+			value = true;
+		}
+		this._reflect = value;
+		this.special = true;
+		return this;
+	}
+	,repeat: function(times) {
+		if(times == null) {
+			times = -1;
+		}
+		this._repeat = times;
+		return this;
+	}
+	,resume: function() {
+		if(this._onResume != null) {
+			var method = this._onResume;
+			var params = this._onResumeParams;
+			if(params == null) {
+				params = [];
+			}
+			method.apply(method,params);
+		}
+	}
+	,reverse: function(value) {
+		if(value == null) {
+			value = true;
+		}
+		this._reverse = value;
+		this.special = true;
+		return this;
+	}
+	,smartRotation: function(value) {
+		if(value == null) {
+			value = true;
+		}
+		this._smartRotation = value;
+		this.special = true;
+		return this;
+	}
+	,snapping: function(value) {
+		if(value == null) {
+			value = true;
+		}
+		this._snapping = value;
+		this.special = true;
+		return this;
+	}
+	,stop: function(properties,complete,sendEvent) {
+	}
+	,__class__: motion_actuators_GenericActuator
+};
+var motion_actuators_SimpleActuator = function(target,duration,properties) {
+	this.active = true;
+	this.propertyDetails = [];
+	this.sendChange = false;
+	this.paused = false;
+	this.cacheVisible = false;
+	this.initialized = false;
+	this.setVisible = false;
+	this.toggleVisible = false;
+	this.startTime = openfl_Lib.getTimer() / 1000;
+	motion_actuators_GenericActuator.call(this,target,duration,properties);
+	if(!motion_actuators_SimpleActuator.addedEvent) {
+		motion_actuators_SimpleActuator.addedEvent = true;
+		openfl_Lib.get_current().stage.addEventListener("enterFrame",motion_actuators_SimpleActuator.stage_onEnterFrame);
+	}
+};
+$hxClasses["motion.actuators.SimpleActuator"] = motion_actuators_SimpleActuator;
+motion_actuators_SimpleActuator.__name__ = "motion.actuators.SimpleActuator";
+motion_actuators_SimpleActuator.stage_onEnterFrame = function(event) {
+	var currentTime = openfl_Lib.getTimer() / 1000;
+	var actuator;
+	var j = 0;
+	var cleanup = false;
+	var _g = 0;
+	var _g1 = motion_actuators_SimpleActuator.actuatorsLength;
+	while(_g < _g1) {
+		var i = _g++;
+		actuator = motion_actuators_SimpleActuator.actuators[j];
+		if(actuator != null && actuator.active) {
+			if(currentTime >= actuator.timeOffset) {
+				actuator.update(currentTime);
+			}
+			++j;
+		} else {
+			motion_actuators_SimpleActuator.actuators.splice(j,1);
+			--motion_actuators_SimpleActuator.actuatorsLength;
+		}
+	}
+};
+motion_actuators_SimpleActuator.__super__ = motion_actuators_GenericActuator;
+motion_actuators_SimpleActuator.prototype = $extend(motion_actuators_GenericActuator.prototype,{
+	reverse: function(value) {
+		var ga = motion_actuators_GenericActuator.prototype.reverse.call(this,value);
+		var startTime = 0;
+		startTime = openfl_Lib.getTimer() / 1000;
+		this.update(startTime);
+		return ga;
+	}
+	,apply: function() {
+		motion_actuators_GenericActuator.prototype.apply.call(this);
+		if(this.toggleVisible && Object.prototype.hasOwnProperty.call(this.properties,"alpha")) {
+			var target = this.target;
+			var value = null;
+			if(Object.prototype.hasOwnProperty.call(target,"visible")) {
+				value = Reflect.field(target,"visible");
+			} else {
+				value = Reflect.getProperty(target,"visible");
+			}
+			if(value != null) {
+				var target = this.target;
+				var value = Reflect.field(this.properties,"alpha") > 0;
+				if(Object.prototype.hasOwnProperty.call(target,"visible") && !(target.__properties__ && target.__properties__["set_" + "visible"])) {
+					target["visible"] = value;
+				} else {
+					Reflect.setProperty(target,"visible",value);
+				}
+			}
+		}
+	}
+	,autoVisible: function(value) {
+		if(value == null) {
+			value = true;
+		}
+		this._autoVisible = value;
+		if(!value) {
+			this.toggleVisible = false;
+			if(this.setVisible) {
+				var target = this.target;
+				var value = this.cacheVisible;
+				if(Object.prototype.hasOwnProperty.call(target,"visible") && !(target.__properties__ && target.__properties__["set_" + "visible"])) {
+					target["visible"] = value;
+				} else {
+					Reflect.setProperty(target,"visible",value);
+				}
+			}
+		}
+		return this;
+	}
+	,delay: function(duration) {
+		this._delay = duration;
+		this.timeOffset = this.startTime + duration;
+		return this;
+	}
+	,getField: function(target,propertyName) {
+		var value = null;
+		if(Object.prototype.hasOwnProperty.call(target,propertyName)) {
+			value = Reflect.field(target,propertyName);
+		} else {
+			value = Reflect.getProperty(target,propertyName);
+		}
+		return value;
+	}
+	,initialize: function() {
+		var details;
+		var start;
+		var _g = 0;
+		var _g1 = Reflect.fields(this.properties);
+		while(_g < _g1.length) {
+			var i = _g1[_g];
+			++_g;
+			var isField = true;
+			if(Object.prototype.hasOwnProperty.call(this.target,i) && !(this.target.__properties__ && this.target.__properties__["set_" + i])) {
+				start = Reflect.field(this.target,i);
+			} else {
+				isField = false;
+				start = Reflect.getProperty(this.target,i);
+			}
+			if(typeof(start) == "number") {
+				var target = this.properties;
+				var value = null;
+				if(Object.prototype.hasOwnProperty.call(target,i)) {
+					value = Reflect.field(target,i);
+				} else {
+					value = Reflect.getProperty(target,i);
+				}
+				var value1 = value;
+				if(start == null) {
+					start = 0;
+				}
+				if(value1 == null) {
+					value1 = 0;
+				}
+				details = new motion_actuators_PropertyDetails(this.target,i,start,value1 - start,isField);
+				this.propertyDetails.push(details);
+			}
+		}
+		this.detailsLength = this.propertyDetails.length;
+		this.initialized = true;
+	}
+	,move: function() {
+		this.toggleVisible = Object.prototype.hasOwnProperty.call(this.properties,"alpha") && ((this.target) instanceof openfl_display_DisplayObject);
+		var tmp;
+		if(this.toggleVisible && this.properties.alpha != 0) {
+			var target = this.target;
+			var value = null;
+			if(Object.prototype.hasOwnProperty.call(target,"visible")) {
+				value = Reflect.field(target,"visible");
+			} else {
+				value = Reflect.getProperty(target,"visible");
+			}
+			tmp = !value;
+		} else {
+			tmp = false;
+		}
+		if(tmp) {
+			this.setVisible = true;
+			var target = this.target;
+			var value = null;
+			if(Object.prototype.hasOwnProperty.call(target,"visible")) {
+				value = Reflect.field(target,"visible");
+			} else {
+				value = Reflect.getProperty(target,"visible");
+			}
+			this.cacheVisible = value;
+			var target = this.target;
+			var value = true;
+			if(Object.prototype.hasOwnProperty.call(target,"visible") && !(target.__properties__ && target.__properties__["set_" + "visible"])) {
+				target["visible"] = value;
+			} else {
+				Reflect.setProperty(target,"visible",value);
+			}
+		}
+		this.timeOffset = this.startTime;
+		motion_actuators_SimpleActuator.actuators.push(this);
+		++motion_actuators_SimpleActuator.actuatorsLength;
+	}
+	,onUpdate: function(handler,parameters) {
+		this._onUpdate = handler;
+		if(parameters == null) {
+			this._onUpdateParams = [];
+		} else {
+			this._onUpdateParams = parameters;
+		}
+		this.sendChange = true;
+		return this;
+	}
+	,pause: function() {
+		if(!this.paused) {
+			this.paused = true;
+			motion_actuators_GenericActuator.prototype.pause.call(this);
+			this.pauseTime = openfl_Lib.getTimer();
+		}
+	}
+	,resume: function() {
+		if(this.paused) {
+			this.paused = false;
+			this.timeOffset += (openfl_Lib.getTimer() - this.pauseTime) / 1000;
+			motion_actuators_GenericActuator.prototype.resume.call(this);
+		}
+	}
+	,setField: function(target,propertyName,value) {
+		if(Object.prototype.hasOwnProperty.call(target,propertyName) && !(target.__properties__ && target.__properties__["set_" + propertyName])) {
+			target[propertyName] = value;
+		} else {
+			Reflect.setProperty(target,propertyName,value);
+		}
+	}
+	,setProperty: function(details,value) {
+		if(details.isField) {
+			details.target[details.propertyName] = value;
+		} else {
+			Reflect.setProperty(details.target,details.propertyName,value);
+		}
+	}
+	,stop: function(properties,complete,sendEvent) {
+		if(this.active) {
+			if(properties == null) {
+				this.active = false;
+				if(complete) {
+					this.apply();
+				}
+				this.complete(sendEvent);
+				return;
+			}
+			var _g = 0;
+			var _g1 = Reflect.fields(properties);
+			while(_g < _g1.length) {
+				var i = _g1[_g];
+				++_g;
+				if(Object.prototype.hasOwnProperty.call(this.properties,i)) {
+					this.active = false;
+					if(complete) {
+						this.apply();
+					}
+					this.complete(sendEvent);
+					return;
+				}
+			}
+		}
+	}
+	,update: function(currentTime) {
+		if(!this.paused) {
+			var details;
+			var easing;
+			var i;
+			var tweenPosition = (currentTime - this.timeOffset) / this.duration;
+			if(tweenPosition > 1) {
+				tweenPosition = 1;
+			}
+			if(!this.initialized) {
+				this.initialize();
+			}
+			if(!this.special) {
+				easing = this._ease.calculate(tweenPosition);
+				var _g = 0;
+				var _g1 = this.detailsLength;
+				while(_g < _g1) {
+					var i = _g++;
+					details = this.propertyDetails[i];
+					this.setProperty(details,details.start + details.change * easing);
+				}
+			} else {
+				if(!this._reverse) {
+					easing = this._ease.calculate(tweenPosition);
+				} else {
+					easing = this._ease.calculate(1 - tweenPosition);
+				}
+				var endValue;
+				var _g = 0;
+				var _g1 = this.detailsLength;
+				while(_g < _g1) {
+					var i = _g++;
+					details = this.propertyDetails[i];
+					if(this._smartRotation && (details.propertyName == "rotation" || details.propertyName == "rotationX" || details.propertyName == "rotationY" || details.propertyName == "rotationZ")) {
+						var rotation = details.change % 360;
+						if(rotation > 180) {
+							rotation -= 360;
+						} else if(rotation < -180) {
+							rotation += 360;
+						}
+						endValue = details.start + rotation * easing;
+					} else {
+						endValue = details.start + details.change * easing;
+					}
+					if(!this._snapping) {
+						this.setProperty(details,endValue);
+					} else {
+						this.setProperty(details,Math.round(endValue));
+					}
+				}
+			}
+			if(tweenPosition == 1) {
+				if(this._repeat == 0) {
+					this.active = false;
+					var tmp;
+					if(this.toggleVisible) {
+						var target = this.target;
+						var value = null;
+						if(Object.prototype.hasOwnProperty.call(target,"alpha")) {
+							value = Reflect.field(target,"alpha");
+						} else {
+							value = Reflect.getProperty(target,"alpha");
+						}
+						tmp = value == 0;
+					} else {
+						tmp = false;
+					}
+					if(tmp) {
+						var target = this.target;
+						var value = false;
+						if(Object.prototype.hasOwnProperty.call(target,"visible") && !(target.__properties__ && target.__properties__["set_" + "visible"])) {
+							target["visible"] = value;
+						} else {
+							Reflect.setProperty(target,"visible",value);
+						}
+					}
+					this.complete(true);
+					return;
+				} else {
+					if(this._onRepeat != null) {
+						var method = this._onRepeat;
+						var params = this._onRepeatParams;
+						if(params == null) {
+							params = [];
+						}
+						method.apply(method,params);
+					}
+					if(this._reflect) {
+						this._reverse = !this._reverse;
+					}
+					this.startTime = currentTime;
+					this.timeOffset = this.startTime + this._delay;
+					if(this._repeat > 0) {
+						this._repeat--;
+					}
+				}
+			}
+			if(this.sendChange) {
+				this.change();
+			}
+		}
+	}
+	,__class__: motion_actuators_SimpleActuator
+});
+var motion_easing_IEasing = function() { };
+$hxClasses["motion.easing.IEasing"] = motion_easing_IEasing;
+motion_easing_IEasing.__name__ = "motion.easing.IEasing";
+motion_easing_IEasing.__isInterface__ = true;
+motion_easing_IEasing.prototype = {
+	__class__: motion_easing_IEasing
+};
+var motion_easing__$Expo_ExpoEaseIn = function() {
+};
+$hxClasses["motion.easing._Expo.ExpoEaseIn"] = motion_easing__$Expo_ExpoEaseIn;
+motion_easing__$Expo_ExpoEaseIn.__name__ = "motion.easing._Expo.ExpoEaseIn";
+motion_easing__$Expo_ExpoEaseIn.__interfaces__ = [motion_easing_IEasing];
+motion_easing__$Expo_ExpoEaseIn.prototype = {
+	calculate: function(k) {
+		if(k == 0) {
+			return 0;
+		} else {
+			return Math.exp(6.931471805599453 * (k - 1));
+		}
+	}
+	,ease: function(t,b,c,d) {
+		if(t == 0) {
+			return b;
+		} else {
+			return c * Math.exp(6.931471805599453 * (t / d - 1)) + b;
+		}
+	}
+	,__class__: motion_easing__$Expo_ExpoEaseIn
+};
+var motion_easing__$Expo_ExpoEaseInOut = function() {
+};
+$hxClasses["motion.easing._Expo.ExpoEaseInOut"] = motion_easing__$Expo_ExpoEaseInOut;
+motion_easing__$Expo_ExpoEaseInOut.__name__ = "motion.easing._Expo.ExpoEaseInOut";
+motion_easing__$Expo_ExpoEaseInOut.__interfaces__ = [motion_easing_IEasing];
+motion_easing__$Expo_ExpoEaseInOut.prototype = {
+	calculate: function(k) {
+		if(k == 0) {
+			return 0;
+		}
+		if(k == 1) {
+			return 1;
+		}
+		if((k /= 0.5) < 1.0) {
+			return 0.5 * Math.exp(6.931471805599453 * (k - 1));
+		}
+		return 0.5 * (2 - Math.exp(-6.931471805599453 * --k));
+	}
+	,ease: function(t,b,c,d) {
+		if(t == 0) {
+			return b;
+		}
+		if(t == d) {
+			return b + c;
+		}
+		if((t /= d / 2.0) < 1.0) {
+			return c / 2 * Math.exp(6.931471805599453 * (t - 1)) + b;
+		}
+		return c / 2 * (2 - Math.exp(-6.931471805599453 * --t)) + b;
+	}
+	,__class__: motion_easing__$Expo_ExpoEaseInOut
+};
+var motion_easing__$Expo_ExpoEaseOut = function() {
+};
+$hxClasses["motion.easing._Expo.ExpoEaseOut"] = motion_easing__$Expo_ExpoEaseOut;
+motion_easing__$Expo_ExpoEaseOut.__name__ = "motion.easing._Expo.ExpoEaseOut";
+motion_easing__$Expo_ExpoEaseOut.__interfaces__ = [motion_easing_IEasing];
+motion_easing__$Expo_ExpoEaseOut.prototype = {
+	calculate: function(k) {
+		if(k == 1) {
+			return 1;
+		} else {
+			return 1 - Math.exp(-6.931471805599453 * k);
+		}
+	}
+	,ease: function(t,b,c,d) {
+		if(t == d) {
+			return b + c;
+		} else {
+			return c * (1 - Math.exp(-6.931471805599453 * t / d)) + b;
+		}
+	}
+	,__class__: motion_easing__$Expo_ExpoEaseOut
+};
+var motion_easing_Expo = function() { };
+$hxClasses["motion.easing.Expo"] = motion_easing_Expo;
+motion_easing_Expo.__name__ = "motion.easing.Expo";
+var motion_Actuate = function() { };
+$hxClasses["motion.Actuate"] = motion_Actuate;
+motion_Actuate.__name__ = "motion.Actuate";
+motion_Actuate.apply = function(target,properties,customActuator) {
+	motion_Actuate.stop(target,properties);
+	if(customActuator == null) {
+		customActuator = motion_Actuate.defaultActuator;
+	}
+	var actuator = Type.createInstance(customActuator,[target,0,properties]);
+	actuator.apply();
+	return actuator;
+};
+motion_Actuate.effects = function(target,duration,overwrite) {
+	if(overwrite == null) {
+		overwrite = true;
+	}
+	return new motion__$Actuate_EffectsOptions(target,duration,overwrite);
+};
+motion_Actuate.getLibrary = function(target,allowCreation) {
+	if(allowCreation == null) {
+		allowCreation = true;
+	}
+	if(motion_Actuate.targetLibraries.h.__keys__[target.__id__] == null && allowCreation) {
+		motion_Actuate.targetLibraries.set(target,[]);
+	}
+	return motion_Actuate.targetLibraries.h[target.__id__];
+};
+motion_Actuate.isActive = function() {
+	var result = false;
+	var library = motion_Actuate.targetLibraries.iterator();
+	while(library.hasNext()) {
+		var library1 = library.next();
+		result = true;
+		break;
+	}
+	return result;
+};
+motion_Actuate.motionPath = function(target,duration,properties,overwrite) {
+	if(overwrite == null) {
+		overwrite = true;
+	}
+	return motion_Actuate.tween(target,duration,properties,overwrite,motion_actuators_MotionPathActuator);
+};
+motion_Actuate.pause = function(target) {
+	if(js_Boot.__implements(target,motion_actuators_IGenericActuator)) {
+		var actuator = target;
+		actuator.pause();
+	} else {
+		var library = motion_Actuate.getLibrary(target,false);
+		if(library != null) {
+			var _g = 0;
+			while(_g < library.length) {
+				var actuator = library[_g];
+				++_g;
+				actuator.pause();
+			}
+		}
+	}
+};
+motion_Actuate.pauseAll = function() {
+	var library = motion_Actuate.targetLibraries.iterator();
+	while(library.hasNext()) {
+		var library1 = library.next();
+		var _g = 0;
+		while(_g < library1.length) {
+			var actuator = library1[_g];
+			++_g;
+			actuator.pause();
+		}
+	}
+};
+motion_Actuate.reset = function() {
+	var library = motion_Actuate.targetLibraries.iterator();
+	while(library.hasNext()) {
+		var library1 = library.next();
+		var i = library1.length - 1;
+		while(i >= 0) {
+			library1[i].stop(null,false,false);
+			--i;
+		}
+	}
+	motion_Actuate.targetLibraries = new haxe_ds_ObjectMap();
+};
+motion_Actuate.resume = function(target) {
+	if(js_Boot.__implements(target,motion_actuators_IGenericActuator)) {
+		var actuator = target;
+		actuator.resume();
+	} else {
+		var library = motion_Actuate.getLibrary(target,false);
+		if(library != null) {
+			var _g = 0;
+			while(_g < library.length) {
+				var actuator = library[_g];
+				++_g;
+				actuator.resume();
+			}
+		}
+	}
+};
+motion_Actuate.resumeAll = function() {
+	var library = motion_Actuate.targetLibraries.iterator();
+	while(library.hasNext()) {
+		var library1 = library.next();
+		var _g = 0;
+		while(_g < library1.length) {
+			var actuator = library1[_g];
+			++_g;
+			actuator.resume();
+		}
+	}
+};
+motion_Actuate.stop = function(target,properties,complete,sendEvent) {
+	if(sendEvent == null) {
+		sendEvent = true;
+	}
+	if(complete == null) {
+		complete = false;
+	}
+	if(target != null) {
+		if(js_Boot.__implements(target,motion_actuators_IGenericActuator)) {
+			var actuator = target;
+			actuator.stop(null,complete,sendEvent);
+		} else {
+			var library = motion_Actuate.getLibrary(target,false);
+			if(library != null) {
+				if(typeof(properties) == "string") {
+					var temp = { };
+					temp[properties] = null;
+					properties = temp;
+				} else if(((properties) instanceof Array)) {
+					var temp = { };
+					var _g = 0;
+					var _g1 = js_Boot.__cast(properties , Array);
+					while(_g < _g1.length) {
+						var property = _g1[_g];
+						++_g;
+						temp[property] = null;
+					}
+					properties = temp;
+				}
+				var i = library.length - 1;
+				while(i >= 0) {
+					library[i].stop(properties,complete,sendEvent);
+					--i;
+				}
+			}
+		}
+	}
+};
+motion_Actuate.timer = function(duration,customActuator) {
+	return motion_Actuate.tween(new motion__$Actuate_TweenTimer(0),duration,new motion__$Actuate_TweenTimer(1),false,customActuator);
+};
+motion_Actuate.transform = function(target,duration,overwrite) {
+	if(overwrite == null) {
+		overwrite = true;
+	}
+	if(duration == null) {
+		duration = 0;
+	}
+	return new motion__$Actuate_TransformOptions(target,duration,overwrite);
+};
+motion_Actuate.tween = function(target,duration,properties,overwrite,customActuator) {
+	if(overwrite == null) {
+		overwrite = true;
+	}
+	if(target != null) {
+		if(duration > 0) {
+			if(customActuator == null) {
+				customActuator = motion_Actuate.defaultActuator;
+			}
+			var actuator = Type.createInstance(customActuator,[target,duration,properties]);
+			var library = motion_Actuate.getLibrary(actuator.target);
+			if(overwrite) {
+				var i = library.length - 1;
+				while(i >= 0) {
+					library[i].stop(actuator.properties,false,false);
+					--i;
+				}
+				library = motion_Actuate.getLibrary(actuator.target);
+			}
+			library.push(actuator);
+			actuator.move();
+			return actuator;
+		} else {
+			return motion_Actuate.apply(target,properties,customActuator);
+		}
+	}
+	return null;
+};
+motion_Actuate.unload = function(actuator) {
+	var target = actuator.target;
+	if(motion_Actuate.targetLibraries.h.__keys__[target.__id__] != null) {
+		HxOverrides.remove(motion_Actuate.targetLibraries.h[target.__id__],actuator);
+		if(motion_Actuate.targetLibraries.h[target.__id__].length == 0) {
+			motion_Actuate.targetLibraries.remove(target);
+		}
+	}
+};
+motion_Actuate.update = function(target,duration,start,end,overwrite) {
+	if(overwrite == null) {
+		overwrite = true;
+	}
+	var properties = { start : start, end : end};
+	return motion_Actuate.tween(target,duration,properties,overwrite,motion_actuators_MethodActuator);
+};
+var motion__$Actuate_EffectsOptions = function(target,duration,overwrite) {
+	this.target = target;
+	this.duration = duration;
+	this.overwrite = overwrite;
+};
+$hxClasses["motion._Actuate.EffectsOptions"] = motion__$Actuate_EffectsOptions;
+motion__$Actuate_EffectsOptions.__name__ = "motion._Actuate.EffectsOptions";
+motion__$Actuate_EffectsOptions.prototype = {
+	filter: function(reference,properties) {
+		properties.filter = reference;
+		return motion_Actuate.tween(this.target,this.duration,properties,this.overwrite,motion_actuators_FilterActuator);
+	}
+	,__class__: motion__$Actuate_EffectsOptions
+};
+var motion__$Actuate_TransformOptions = function(target,duration,overwrite) {
+	this.target = target;
+	this.duration = duration;
+	this.overwrite = overwrite;
+};
+$hxClasses["motion._Actuate.TransformOptions"] = motion__$Actuate_TransformOptions;
+motion__$Actuate_TransformOptions.__name__ = "motion._Actuate.TransformOptions";
+motion__$Actuate_TransformOptions.prototype = {
+	color: function(value,strength,alpha) {
+		if(strength == null) {
+			strength = 1;
+		}
+		if(value == null) {
+			value = 0;
+		}
+		var properties = { colorValue : value, colorStrength : strength};
+		if(alpha != null) {
+			properties.colorAlpha = alpha;
+		}
+		return motion_Actuate.tween(this.target,this.duration,properties,this.overwrite,motion_actuators_TransformActuator);
+	}
+	,sound: function(volume,pan) {
+		var properties = { };
+		if(volume != null) {
+			properties.soundVolume = volume;
+		}
+		if(pan != null) {
+			properties.soundPan = pan;
+		}
+		return motion_Actuate.tween(this.target,this.duration,properties,this.overwrite,motion_actuators_TransformActuator);
+	}
+	,__class__: motion__$Actuate_TransformOptions
+};
+var motion__$Actuate_TweenTimer = function(progress) {
+	this.progress = progress;
+};
+$hxClasses["motion._Actuate.TweenTimer"] = motion__$Actuate_TweenTimer;
+motion__$Actuate_TweenTimer.__name__ = "motion._Actuate.TweenTimer";
+motion__$Actuate_TweenTimer.prototype = {
+	__class__: motion__$Actuate_TweenTimer
+};
+var motion_MotionPath = function() {
+	this._x = new motion__$MotionPath_ComponentPath();
+	this._y = new motion__$MotionPath_ComponentPath();
+	this._rotation = null;
+};
+$hxClasses["motion.MotionPath"] = motion_MotionPath;
+motion_MotionPath.__name__ = "motion.MotionPath";
+motion_MotionPath.prototype = {
+	bezier: function(x,y,controlX,controlY,strength) {
+		if(strength == null) {
+			strength = 1;
+		}
+		return this.bezierN(x,y,[controlX],[controlY],strength);
+	}
+	,bezierN: function(x,y,controlX,controlY,strength) {
+		if(strength == null) {
+			strength = 1;
+		}
+		this._x.addPath(new motion__$MotionPath_BezierPath(x,controlX,strength));
+		this._y.addPath(new motion__$MotionPath_BezierPath(y,controlY,strength));
+		return this;
+	}
+	,bezierSpline: function(x,y,strength) {
+		if(strength == null) {
+			strength = 1;
+		}
+		this._x.addPath(new motion__$MotionPath_BezierSplinePath(x,strength));
+		this._y.addPath(new motion__$MotionPath_BezierSplinePath(y,strength));
+		return this;
+	}
+	,line: function(x,y,strength) {
+		if(strength == null) {
+			strength = 1;
+		}
+		return this.bezierN(x,y,[],[],strength);
+	}
+	,get_rotation: function() {
+		if(this._rotation == null) {
+			this._rotation = new motion__$MotionPath_RotationPath(this._x,this._y);
+		}
+		return this._rotation;
+	}
+	,get_x: function() {
+		return this._x;
+	}
+	,get_y: function() {
+		return this._y;
+	}
+	,__class__: motion_MotionPath
+	,__properties__: {get_y:"get_y",get_x:"get_x",get_rotation:"get_rotation"}
+};
+var motion_IComponentPath = function() { };
+$hxClasses["motion.IComponentPath"] = motion_IComponentPath;
+motion_IComponentPath.__name__ = "motion.IComponentPath";
+motion_IComponentPath.__isInterface__ = true;
+motion_IComponentPath.prototype = {
+	__class__: motion_IComponentPath
+	,__properties__: {get_end:"get_end",set_start:"set_start",get_start:"get_start"}
+};
+var motion__$MotionPath_ComponentPath = function() {
+	this.paths = [];
+	this.strength = 0;
+};
+$hxClasses["motion._MotionPath.ComponentPath"] = motion__$MotionPath_ComponentPath;
+motion__$MotionPath_ComponentPath.__name__ = "motion._MotionPath.ComponentPath";
+motion__$MotionPath_ComponentPath.__interfaces__ = [motion_IComponentPath];
+motion__$MotionPath_ComponentPath.prototype = {
+	addPath: function(path) {
+		if(this.paths.length > 0) {
+			path.set_start(this.paths[this.paths.length - 1].get_end());
+		}
+		this.paths.push(path);
+		this.strength += path.strength;
+	}
+	,calculate: function(k) {
+		if(this.paths.length == 1) {
+			return this.paths[0].calculate(k);
+		} else {
+			var ratio = k * this.strength;
+			var _g = 0;
+			var _g1 = this.paths;
+			while(_g < _g1.length) {
+				var path = _g1[_g];
+				++_g;
+				if(ratio - path.strength > 1e-7) {
+					ratio -= path.strength;
+				} else {
+					return path.calculate(ratio / path.strength);
+				}
+			}
+		}
+		return 0;
+	}
+	,get_start: function() {
+		if(this.paths.length > 0) {
+			return this.paths[0].get_start();
+		} else {
+			return 0;
+		}
+	}
+	,set_start: function(value) {
+		if(this.paths.length > 0) {
+			return this.paths[0].set_start(value);
+		} else {
+			return 0;
+		}
+	}
+	,get_end: function() {
+		if(this.paths.length > 0) {
+			var path = this.paths[this.paths.length - 1];
+			return path.get_end();
+		} else {
+			return this.get_start();
+		}
+	}
+	,__class__: motion__$MotionPath_ComponentPath
+	,__properties__: {get_end:"get_end",set_start:"set_start",get_start:"get_start"}
+};
+var motion__$MotionPath_BezierPath = function(end,control,strength) {
+	this._end = end;
+	this.control = control;
+	this.strength = strength;
+};
+$hxClasses["motion._MotionPath.BezierPath"] = motion__$MotionPath_BezierPath;
+motion__$MotionPath_BezierPath.__name__ = "motion._MotionPath.BezierPath";
+motion__$MotionPath_BezierPath.__interfaces__ = [motion_IComponentPath];
+motion__$MotionPath_BezierPath.prototype = {
+	calculate: function(k) {
+		var l = 1 - k;
+		switch(this.control.length) {
+		case 0:
+			return l * this._start + k * this._end;
+		case 1:
+			return l * l * this._start + 2 * l * k * this.control[0] + k * k * this._end;
+		case 2:
+			return l * l * l * this._start + 3 * l * l * k * this.control[0] + 3 * l * k * k * this.control[1] + k * k * k * this._end;
+		default:
+			if(l < 1e-7) {
+				return this._end;
+			}
+			var r = k / l;
+			var n = this.control.length + 1;
+			var coeff = Math.pow(l,n);
+			var res = coeff * this._start;
+			var _g = 1;
+			var _g1 = n;
+			while(_g < _g1) {
+				var i = _g++;
+				coeff *= r * (n + 1 - i) / i;
+				res += coeff * this.control[i - 1];
+			}
+			coeff *= r / n;
+			return res + coeff * this._end;
+		}
+	}
+	,get_start: function() {
+		return this._start;
+	}
+	,set_start: function(value) {
+		return this._start = value;
+	}
+	,get_end: function() {
+		return this._end;
+	}
+	,__class__: motion__$MotionPath_BezierPath
+	,__properties__: {get_end:"get_end",set_start:"set_start",get_start:"get_start"}
+};
+var motion__$MotionPath_BezierSplinePath = function(through,strength) {
+	motion__$MotionPath_ComponentPath.call(this);
+	this.through = through;
+	this.strength = strength;
+};
+$hxClasses["motion._MotionPath.BezierSplinePath"] = motion__$MotionPath_BezierSplinePath;
+motion__$MotionPath_BezierSplinePath.__name__ = "motion._MotionPath.BezierSplinePath";
+motion__$MotionPath_BezierSplinePath.__super__ = motion__$MotionPath_ComponentPath;
+motion__$MotionPath_BezierSplinePath.prototype = $extend(motion__$MotionPath_ComponentPath.prototype,{
+	computeControlPoints: function(start) {
+		var K = [start].concat(this.through);
+		var n = K.length;
+		var _g = [];
+		var _g1 = 0;
+		var _g2 = n;
+		while(_g1 < _g2) {
+			var _ = _g1++;
+			_g.push([0.0,0.0]);
+		}
+		var control = _g;
+		var a = [];
+		var b = [];
+		var c = [];
+		var r = [];
+		a[0] = 0;
+		b[0] = 2;
+		c[0] = 1;
+		r[0] = K[0] + 2 * K[1];
+		var _g = 1;
+		var _g1 = n - 1;
+		while(_g < _g1) {
+			var i = _g++;
+			a[i] = 1;
+			b[i] = 4;
+			c[i] = 1;
+			r[i] = 4 * K[i] + 2 * K[i + 1];
+		}
+		a[n - 1] = 1;
+		b[n - 1] = 2;
+		c[n - 1] = 0;
+		r[n - 1] = 3 * K[n - 1];
+		var _g = 1;
+		var _g1 = n;
+		while(_g < _g1) {
+			var i = _g++;
+			var m = a[i] / b[i - 1];
+			b[i] -= m * c[i - 1];
+			r[i] -= m * r[i - 1];
+		}
+		control[n - 1][0] = r[n - 1] / b[n - 1];
+		var i = n - 2;
+		while(i >= 0) {
+			control[i][0] = (r[i] - c[i] * control[i + 1][0]) / b[i];
+			--i;
+		}
+		var _g = 0;
+		var _g1 = n - 1;
+		while(_g < _g1) {
+			var i = _g++;
+			control[i][1] = 2 * K[i + 1] - control[i + 1][0];
+		}
+		control[n - 1][1] = 0.5 * (K[n] + control[n - 1][0]);
+		control.pop();
+		return control;
+	}
+	,set_start: function(value) {
+		if(this.paths.length == 0 || Math.abs(value - this.get_start()) > 1e-7) {
+			var control = this.computeControlPoints(value);
+			var pathStrength = this.strength / control.length;
+			this.strength = 0;
+			this.paths.splice(0,this.paths.length);
+			var _g = 0;
+			var _g1 = control.length;
+			while(_g < _g1) {
+				var i = _g++;
+				this.addPath(new motion__$MotionPath_BezierPath(this.through[i],control[i],pathStrength));
+			}
+		}
+		return motion__$MotionPath_ComponentPath.prototype.set_start.call(this,value);
+	}
+	,get_end: function() {
+		return this.through[this.through.length - 1];
+	}
+	,__class__: motion__$MotionPath_BezierSplinePath
+});
+var motion__$MotionPath_RotationPath = function(x,y) {
+	this.step = 0.01;
+	this._x = x;
+	this._y = y;
+	this.offset = 0;
+	this.set_start(this.calculate(0.0));
+};
+$hxClasses["motion._MotionPath.RotationPath"] = motion__$MotionPath_RotationPath;
+motion__$MotionPath_RotationPath.__name__ = "motion._MotionPath.RotationPath";
+motion__$MotionPath_RotationPath.__interfaces__ = [motion_IComponentPath];
+motion__$MotionPath_RotationPath.prototype = {
+	calculate: function(k) {
+		var dX = this._x.calculate(k) - this._x.calculate(k + this.step);
+		var dY = this._y.calculate(k) - this._y.calculate(k + this.step);
+		var angle = Math.atan2(dY,dX) * (180 / Math.PI);
+		angle = (angle + this.offset) % 360;
+		return angle;
+	}
+	,get_start: function() {
+		return this._start;
+	}
+	,set_start: function(value) {
+		return this._start;
+	}
+	,get_end: function() {
+		return this.calculate(1.0);
+	}
+	,__class__: motion__$MotionPath_RotationPath
+	,__properties__: {set_start:"set_start",get_start:"get_start",get_end:"get_end"}
+};
+var motion_actuators_FilterActuator = function(target,duration,properties) {
+	this.filterIndex = -1;
+	motion_actuators_SimpleActuator.call(this,target,duration,properties);
+	if(js_Boot.__instanceof(properties.filter,Class)) {
+		this.filterClass = properties.filter;
+		if(target.get_filters().length == 0) {
+			target.set_filters([Type.createInstance(this.filterClass,[])]);
+		}
+		var _g = 0;
+		var _g1 = target.get_filters();
+		while(_g < _g1.length) {
+			var filter = _g1[_g];
+			++_g;
+			if(js_Boot.__instanceof(filter,this.filterClass)) {
+				this.filter = filter;
+			}
+		}
+	} else {
+		this.filterIndex = properties.filter;
+		this.filter = target.get_filters()[this.filterIndex];
+	}
+};
+$hxClasses["motion.actuators.FilterActuator"] = motion_actuators_FilterActuator;
+motion_actuators_FilterActuator.__name__ = "motion.actuators.FilterActuator";
+motion_actuators_FilterActuator.__super__ = motion_actuators_SimpleActuator;
+motion_actuators_FilterActuator.prototype = $extend(motion_actuators_SimpleActuator.prototype,{
+	apply: function() {
+		var _g = 0;
+		var _g1 = Reflect.fields(this.properties);
+		while(_g < _g1.length) {
+			var propertyName = _g1[_g];
+			++_g;
+			if(propertyName != "filter") {
+				Reflect.setProperty(this.filter,propertyName,Reflect.field(this.properties,propertyName));
+			}
+		}
+		this.setFilter();
+	}
+	,initialize: function() {
+		var details;
+		var start;
+		var _g = 0;
+		var _g1 = Reflect.fields(this.properties);
+		while(_g < _g1.length) {
+			var propertyName = _g1[_g];
+			++_g;
+			if(propertyName != "filter") {
+				var target = this.filter;
+				var value = null;
+				if(Object.prototype.hasOwnProperty.call(target,propertyName)) {
+					value = Reflect.field(target,propertyName);
+				} else {
+					value = Reflect.getProperty(target,propertyName);
+				}
+				start = value;
+				details = new motion_actuators_PropertyDetails(this.filter,propertyName,start,Reflect.field(this.properties,propertyName) - start,Object.prototype.hasOwnProperty.call(this.filter,"set_" + propertyName));
+				this.propertyDetails.push(details);
+			}
+		}
+		this.detailsLength = this.propertyDetails.length;
+		this.initialized = true;
+	}
+	,setFilter: function() {
+		var filters = this.target.get_filters();
+		if(this.filterIndex > -1) {
+			filters[this.filterIndex] = this.filter;
+		} else {
+			var _g = 0;
+			var _g1 = filters.length;
+			while(_g < _g1) {
+				var i = _g++;
+				if(js_Boot.__instanceof(filters[i],this.filterClass)) {
+					filters[i] = this.filter;
+				}
+			}
+		}
+		var target = this.target;
+		var value = filters;
+		if(Object.prototype.hasOwnProperty.call(target,"filters") && !(target.__properties__ && target.__properties__["set_" + "filters"])) {
+			target["filters"] = value;
+		} else {
+			Reflect.setProperty(target,"filters",value);
+		}
+	}
+	,update: function(currentTime) {
+		motion_actuators_SimpleActuator.prototype.update.call(this,currentTime);
+		this.setFilter();
+	}
+	,__class__: motion_actuators_FilterActuator
+});
+var motion_actuators_MethodActuator = function(target,duration,properties) {
+	this.currentParameters = [];
+	this.tweenProperties = { };
+	motion_actuators_SimpleActuator.call(this,target,duration,properties);
+	if(!Object.prototype.hasOwnProperty.call(properties,"start")) {
+		this.properties.start = [];
+	}
+	if(!Object.prototype.hasOwnProperty.call(properties,"end")) {
+		this.properties.end = this.properties.start;
+	}
+	var _g = 0;
+	var _g1 = this.properties.start.length;
+	while(_g < _g1) {
+		var i = _g++;
+		this.currentParameters.push(this.properties.start[i]);
+	}
+};
+$hxClasses["motion.actuators.MethodActuator"] = motion_actuators_MethodActuator;
+motion_actuators_MethodActuator.__name__ = "motion.actuators.MethodActuator";
+motion_actuators_MethodActuator.__super__ = motion_actuators_SimpleActuator;
+motion_actuators_MethodActuator.prototype = $extend(motion_actuators_SimpleActuator.prototype,{
+	apply: function() {
+		var method = this.target;
+		var params = this.properties.end;
+		if(params == null) {
+			params = [];
+		}
+		method.apply(method,params);
+	}
+	,complete: function(sendEvent) {
+		if(sendEvent == null) {
+			sendEvent = true;
+		}
+		if(this.initialized) {
+			var _g = 0;
+			var _g1 = this.properties.start.length;
+			while(_g < _g1) {
+				var i = _g++;
+				this.currentParameters[i] = Reflect.field(this.tweenProperties,"param" + i);
+			}
+			var method = this.target;
+			var params = this.currentParameters;
+			if(params == null) {
+				params = [];
+			}
+			method.apply(method,params);
+		}
+		motion_actuators_SimpleActuator.prototype.complete.call(this,sendEvent);
+	}
+	,initialize: function() {
+		var details;
+		var propertyName;
+		var start;
+		var _g = 0;
+		var _g1 = this.properties.start.length;
+		while(_g < _g1) {
+			var i = _g++;
+			propertyName = "param" + i;
+			start = this.properties.start[i];
+			this.tweenProperties[propertyName] = start;
+			if(typeof(start) == "number" || typeof(start) == "number" && ((start | 0) === start)) {
+				details = new motion_actuators_PropertyDetails(this.tweenProperties,propertyName,start,this.properties.end[i] - start);
+				this.propertyDetails.push(details);
+			}
+		}
+		this.detailsLength = this.propertyDetails.length;
+		this.initialized = true;
+	}
+	,update: function(currentTime) {
+		motion_actuators_SimpleActuator.prototype.update.call(this,currentTime);
+		if(this.active && !this.paused) {
+			var _g = 0;
+			var _g1 = this.properties.start.length;
+			while(_g < _g1) {
+				var i = _g++;
+				this.currentParameters[i] = Reflect.field(this.tweenProperties,"param" + i);
+			}
+			var method = this.target;
+			var params = this.currentParameters;
+			if(params == null) {
+				params = [];
+			}
+			method.apply(method,params);
+		}
+	}
+	,__class__: motion_actuators_MethodActuator
+});
+var motion_actuators_MotionPathActuator = function(target,duration,properties) {
+	motion_actuators_SimpleActuator.call(this,target,duration,properties);
+};
+$hxClasses["motion.actuators.MotionPathActuator"] = motion_actuators_MotionPathActuator;
+motion_actuators_MotionPathActuator.__name__ = "motion.actuators.MotionPathActuator";
+motion_actuators_MotionPathActuator.__super__ = motion_actuators_SimpleActuator;
+motion_actuators_MotionPathActuator.prototype = $extend(motion_actuators_SimpleActuator.prototype,{
+	apply: function() {
+		var _g = 0;
+		var _g1 = Reflect.fields(this.properties);
+		while(_g < _g1.length) {
+			var propertyName = _g1[_g];
+			++_g;
+			if(Object.prototype.hasOwnProperty.call(this.target,propertyName)) {
+				this.target[propertyName] = (js_Boot.__cast(Reflect.field(this.properties,propertyName) , motion_IComponentPath)).get_end();
+			} else {
+				Reflect.setProperty(this.target,propertyName,(js_Boot.__cast(Reflect.field(this.properties,propertyName) , motion_IComponentPath)).get_end());
+			}
+		}
+	}
+	,initialize: function() {
+		var details;
+		var path;
+		var _g = 0;
+		var _g1 = Reflect.fields(this.properties);
+		while(_g < _g1.length) {
+			var propertyName = _g1[_g];
+			++_g;
+			path = js_Boot.__cast(Reflect.field(this.properties,propertyName) , motion_IComponentPath);
+			if(path != null) {
+				var isField = true;
+				if(Object.prototype.hasOwnProperty.call(this.target,propertyName)) {
+					path.set_start(Reflect.field(this.target,propertyName));
+				} else {
+					isField = false;
+					path.set_start(Reflect.getProperty(this.target,propertyName));
+				}
+				details = new motion_actuators_PropertyPathDetails(this.target,propertyName,path,isField);
+				this.propertyDetails.push(details);
+			}
+		}
+		this.detailsLength = this.propertyDetails.length;
+		this.initialized = true;
+	}
+	,update: function(currentTime) {
+		if(!this.paused) {
+			var details;
+			var easing;
+			var tweenPosition = (currentTime - this.timeOffset) / this.duration;
+			if(tweenPosition > 1) {
+				tweenPosition = 1;
+			}
+			if(!this.initialized) {
+				this.initialize();
+			}
+			if(!this.special) {
+				easing = this._ease.calculate(tweenPosition);
+				var _g = 0;
+				var _g1 = this.propertyDetails;
+				while(_g < _g1.length) {
+					var details = _g1[_g];
+					++_g;
+					if(details.isField) {
+						details.target[details.propertyName] = (js_Boot.__cast(details , motion_actuators_PropertyPathDetails)).path.calculate(easing);
+					} else {
+						Reflect.setProperty(details.target,details.propertyName,(js_Boot.__cast(details , motion_actuators_PropertyPathDetails)).path.calculate(easing));
+					}
+				}
+			} else {
+				if(!this._reverse) {
+					easing = this._ease.calculate(tweenPosition);
+				} else {
+					easing = this._ease.calculate(1 - tweenPosition);
+				}
+				var endValue;
+				var _g = 0;
+				var _g1 = this.propertyDetails;
+				while(_g < _g1.length) {
+					var details = _g1[_g];
+					++_g;
+					if(!this._snapping) {
+						if(details.isField) {
+							details.target[details.propertyName] = (js_Boot.__cast(details , motion_actuators_PropertyPathDetails)).path.calculate(easing);
+						} else {
+							Reflect.setProperty(details.target,details.propertyName,(js_Boot.__cast(details , motion_actuators_PropertyPathDetails)).path.calculate(easing));
+						}
+					} else if(details.isField) {
+						details.target[details.propertyName] = Math.round((js_Boot.__cast(details , motion_actuators_PropertyPathDetails)).path.calculate(easing));
+					} else {
+						Reflect.setProperty(details.target,details.propertyName,Math.round((js_Boot.__cast(details , motion_actuators_PropertyPathDetails)).path.calculate(easing)));
+					}
+				}
+			}
+			if(tweenPosition == 1) {
+				if(this._repeat == 0) {
+					this.active = false;
+					var tmp;
+					if(this.toggleVisible) {
+						var target = this.target;
+						var value = null;
+						if(Object.prototype.hasOwnProperty.call(target,"alpha")) {
+							value = Reflect.field(target,"alpha");
+						} else {
+							value = Reflect.getProperty(target,"alpha");
+						}
+						tmp = value == 0;
+					} else {
+						tmp = false;
+					}
+					if(tmp) {
+						var target = this.target;
+						var value = false;
+						if(Object.prototype.hasOwnProperty.call(target,"visible") && !(target.__properties__ && target.__properties__["set_" + "visible"])) {
+							target["visible"] = value;
+						} else {
+							Reflect.setProperty(target,"visible",value);
+						}
+					}
+					this.complete(true);
+					return;
+				} else {
+					if(this._onRepeat != null) {
+						var method = this._onRepeat;
+						var params = this._onRepeatParams;
+						if(params == null) {
+							params = [];
+						}
+						method.apply(method,params);
+					}
+					if(this._reflect) {
+						this._reverse = !this._reverse;
+					}
+					this.startTime = currentTime;
+					this.timeOffset = this.startTime + this._delay;
+					if(this._repeat > 0) {
+						this._repeat--;
+					}
+				}
+			}
+			if(this.sendChange) {
+				this.change();
+			}
+		}
+	}
+	,__class__: motion_actuators_MotionPathActuator
+});
+var motion_actuators_PropertyDetails = function(target,propertyName,start,change,isField) {
+	if(isField == null) {
+		isField = true;
+	}
+	this.target = target;
+	this.propertyName = propertyName;
+	this.start = start;
+	this.change = change;
+	this.isField = isField;
+};
+$hxClasses["motion.actuators.PropertyDetails"] = motion_actuators_PropertyDetails;
+motion_actuators_PropertyDetails.__name__ = "motion.actuators.PropertyDetails";
+motion_actuators_PropertyDetails.prototype = {
+	__class__: motion_actuators_PropertyDetails
+};
+var motion_actuators_PropertyPathDetails = function(target,propertyName,path,isField) {
+	if(isField == null) {
+		isField = true;
+	}
+	motion_actuators_PropertyDetails.call(this,target,propertyName,0,0,isField);
+	this.path = path;
+};
+$hxClasses["motion.actuators.PropertyPathDetails"] = motion_actuators_PropertyPathDetails;
+motion_actuators_PropertyPathDetails.__name__ = "motion.actuators.PropertyPathDetails";
+motion_actuators_PropertyPathDetails.__super__ = motion_actuators_PropertyDetails;
+motion_actuators_PropertyPathDetails.prototype = $extend(motion_actuators_PropertyDetails.prototype,{
+	__class__: motion_actuators_PropertyPathDetails
+});
+var motion_actuators_TransformActuator = function(target,duration,properties) {
+	motion_actuators_SimpleActuator.call(this,target,duration,properties);
+};
+$hxClasses["motion.actuators.TransformActuator"] = motion_actuators_TransformActuator;
+motion_actuators_TransformActuator.__name__ = "motion.actuators.TransformActuator";
+motion_actuators_TransformActuator.__super__ = motion_actuators_SimpleActuator;
+motion_actuators_TransformActuator.prototype = $extend(motion_actuators_SimpleActuator.prototype,{
+	apply: function() {
+		this.initialize();
+		if(this.endColorTransform != null) {
+			var target = this.target;
+			var value = null;
+			if(Object.prototype.hasOwnProperty.call(target,"transform")) {
+				value = Reflect.field(target,"transform");
+			} else {
+				value = Reflect.getProperty(target,"transform");
+			}
+			var transform = value;
+			var value = this.endColorTransform;
+			if(Object.prototype.hasOwnProperty.call(transform,"colorTransform") && !(transform.__properties__ && transform.__properties__["set_" + "colorTransform"])) {
+				transform["colorTransform"] = value;
+			} else {
+				Reflect.setProperty(transform,"colorTransform",value);
+			}
+		}
+		if(this.endSoundTransform != null) {
+			var target = this.target;
+			var value = this.endSoundTransform;
+			if(Object.prototype.hasOwnProperty.call(target,"soundTransform") && !(target.__properties__ && target.__properties__["set_" + "soundTransform"])) {
+				target["soundTransform"] = value;
+			} else {
+				Reflect.setProperty(target,"soundTransform",value);
+			}
+		}
+	}
+	,initialize: function() {
+		if(Object.prototype.hasOwnProperty.call(this.properties,"colorValue") && ((this.target) instanceof openfl_display_DisplayObject)) {
+			this.initializeColor();
+		}
+		if(Object.prototype.hasOwnProperty.call(this.properties,"soundVolume") || Object.prototype.hasOwnProperty.call(this.properties,"soundPan")) {
+			this.initializeSound();
+		}
+		this.detailsLength = this.propertyDetails.length;
+		this.initialized = true;
+	}
+	,initializeColor: function() {
+		this.endColorTransform = new openfl_geom_ColorTransform();
+		var color = this.properties.colorValue;
+		var strength = this.properties.colorStrength;
+		if(strength < 1) {
+			var multiplier;
+			var offset;
+			if(strength < 0.5) {
+				multiplier = 1;
+				offset = strength * 2;
+			} else {
+				multiplier = 1 - (strength - 0.5) * 2;
+				offset = 1;
+			}
+			this.endColorTransform.redMultiplier = multiplier;
+			this.endColorTransform.greenMultiplier = multiplier;
+			this.endColorTransform.blueMultiplier = multiplier;
+			this.endColorTransform.redOffset = offset * (color >> 16 & 255);
+			this.endColorTransform.greenOffset = offset * (color >> 8 & 255);
+			this.endColorTransform.blueOffset = offset * (color & 255);
+		} else {
+			this.endColorTransform.redMultiplier = 0;
+			this.endColorTransform.greenMultiplier = 0;
+			this.endColorTransform.blueMultiplier = 0;
+			this.endColorTransform.redOffset = color >> 16 & 255;
+			this.endColorTransform.greenOffset = color >> 8 & 255;
+			this.endColorTransform.blueOffset = color & 255;
+		}
+		var propertyNames = ["redMultiplier","greenMultiplier","blueMultiplier","redOffset","greenOffset","blueOffset"];
+		if(Object.prototype.hasOwnProperty.call(this.properties,"colorAlpha")) {
+			this.endColorTransform.alphaMultiplier = this.properties.colorAlpha;
+			propertyNames.push("alphaMultiplier");
+		} else {
+			var target = this.target;
+			var value = null;
+			if(Object.prototype.hasOwnProperty.call(target,"alpha")) {
+				value = Reflect.field(target,"alpha");
+			} else {
+				value = Reflect.getProperty(target,"alpha");
+			}
+			this.endColorTransform.alphaMultiplier = value;
+		}
+		var target = this.target;
+		var value = null;
+		if(Object.prototype.hasOwnProperty.call(target,"transform")) {
+			value = Reflect.field(target,"transform");
+		} else {
+			value = Reflect.getProperty(target,"transform");
+		}
+		var transform = value;
+		var value = null;
+		if(Object.prototype.hasOwnProperty.call(transform,"colorTransform")) {
+			value = Reflect.field(transform,"colorTransform");
+		} else {
+			value = Reflect.getProperty(transform,"colorTransform");
+		}
+		var begin = value;
+		this.tweenColorTransform = new openfl_geom_ColorTransform();
+		var details;
+		var start;
+		var _g = 0;
+		while(_g < propertyNames.length) {
+			var propertyName = propertyNames[_g];
+			++_g;
+			var value = null;
+			if(Object.prototype.hasOwnProperty.call(begin,propertyName)) {
+				value = Reflect.field(begin,propertyName);
+			} else {
+				value = Reflect.getProperty(begin,propertyName);
+			}
+			start = value;
+			var details1 = this.tweenColorTransform;
+			var target = this.endColorTransform;
+			var value1 = null;
+			if(Object.prototype.hasOwnProperty.call(target,propertyName)) {
+				value1 = Reflect.field(target,propertyName);
+			} else {
+				value1 = Reflect.getProperty(target,propertyName);
+			}
+			details = new motion_actuators_PropertyDetails(details1,propertyName,start,value1 - start);
+			this.propertyDetails.push(details);
+		}
+	}
+	,initializeSound: function() {
+		var target = this.target;
+		var value = null;
+		if(Object.prototype.hasOwnProperty.call(target,"soundTransform")) {
+			value = Reflect.field(target,"soundTransform");
+		} else {
+			value = Reflect.getProperty(target,"soundTransform");
+		}
+		if(value == null) {
+			var target = this.target;
+			var value = new openfl_media_SoundTransform();
+			if(Object.prototype.hasOwnProperty.call(target,"soundTransform") && !(target.__properties__ && target.__properties__["set_" + "soundTransform"])) {
+				target["soundTransform"] = value;
+			} else {
+				Reflect.setProperty(target,"soundTransform",value);
+			}
+		}
+		var target = this.target;
+		var value = null;
+		if(Object.prototype.hasOwnProperty.call(target,"soundTransform")) {
+			value = Reflect.field(target,"soundTransform");
+		} else {
+			value = Reflect.getProperty(target,"soundTransform");
+		}
+		var start = value;
+		var target = this.target;
+		var value = null;
+		if(Object.prototype.hasOwnProperty.call(target,"soundTransform")) {
+			value = Reflect.field(target,"soundTransform");
+		} else {
+			value = Reflect.getProperty(target,"soundTransform");
+		}
+		this.endSoundTransform = value;
+		this.tweenSoundTransform = new openfl_media_SoundTransform();
+		if(Object.prototype.hasOwnProperty.call(this.properties,"soundVolume")) {
+			this.endSoundTransform.volume = this.properties.soundVolume;
+			this.propertyDetails.push(new motion_actuators_PropertyDetails(this.tweenSoundTransform,"volume",start.volume,this.endSoundTransform.volume - start.volume));
+		}
+		if(Object.prototype.hasOwnProperty.call(this.properties,"soundPan")) {
+			this.endSoundTransform.pan = this.properties.soundPan;
+			this.propertyDetails.push(new motion_actuators_PropertyDetails(this.tweenSoundTransform,"pan",start.pan,this.endSoundTransform.pan - start.pan));
+		}
+	}
+	,update: function(currentTime) {
+		motion_actuators_SimpleActuator.prototype.update.call(this,currentTime);
+		if(this.endColorTransform != null) {
+			var target = this.target;
+			var value = null;
+			if(Object.prototype.hasOwnProperty.call(target,"transform")) {
+				value = Reflect.field(target,"transform");
+			} else {
+				value = Reflect.getProperty(target,"transform");
+			}
+			var transform = value;
+			var value = this.tweenColorTransform;
+			if(Object.prototype.hasOwnProperty.call(transform,"colorTransform") && !(transform.__properties__ && transform.__properties__["set_" + "colorTransform"])) {
+				transform["colorTransform"] = value;
+			} else {
+				Reflect.setProperty(transform,"colorTransform",value);
+			}
+		}
+		if(this.endSoundTransform != null) {
+			var target = this.target;
+			var value = this.tweenSoundTransform;
+			if(Object.prototype.hasOwnProperty.call(target,"soundTransform") && !(target.__properties__ && target.__properties__["set_" + "soundTransform"])) {
+				target["soundTransform"] = value;
+			} else {
+				Reflect.setProperty(target,"soundTransform",value);
+			}
+		}
+	}
+	,__class__: motion_actuators_TransformActuator
+});
 var openfl_utils_Dictionary = {};
 openfl_utils_Dictionary.exists = function(this1,key) {
 	return this1.exists(key);
@@ -79269,6 +81027,15 @@ lime_utils_UInt16Array.BYTES_PER_ELEMENT = 2;
 lime_utils_UInt32Array.BYTES_PER_ELEMENT = 4;
 lime_utils_UInt8Array.BYTES_PER_ELEMENT = 1;
 lime_utils_UInt8ClampedArray.BYTES_PER_ELEMENT = 1;
+motion_actuators_SimpleActuator.actuators = [];
+motion_actuators_SimpleActuator.actuatorsLength = 0;
+motion_actuators_SimpleActuator.addedEvent = false;
+motion_easing_Expo.easeIn = new motion_easing__$Expo_ExpoEaseIn();
+motion_easing_Expo.easeInOut = new motion_easing__$Expo_ExpoEaseInOut();
+motion_easing_Expo.easeOut = new motion_easing__$Expo_ExpoEaseOut();
+motion_Actuate.defaultActuator = motion_actuators_SimpleActuator;
+motion_Actuate.defaultEase = motion_easing_Expo.easeOut;
+motion_Actuate.targetLibraries = new haxe_ds_ObjectMap();
 openfl_Lib.__lastTimerID = 0;
 openfl_Lib.__sentWarnings = new haxe_ds_StringMap();
 openfl_Lib.__timers = new haxe_ds_IntMap();
