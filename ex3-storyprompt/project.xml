@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project>
+	
+	<meta title="Ex3Storyprompt" package="com.sample.ex3storyprompt" version="1.0.0" company="Company Name" />
+	<app main="Main" path="Export" file="Ex3Storyprompt" />
+	
+	<source path="Source" />
+	
+	<haxelib name="openfl" />
+	
+	<assets path="Assets" rename="assets" />
+	
+</project>
