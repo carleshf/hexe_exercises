@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project>
+	
+	<meta title="Ex5BranchingChoices" package="com.sample.ex5branchingchoices" version="1.0.0" company="Company Name" />
+	<app main="Main" path="Export" file="Ex5BranchingChoices" />
+	
+	<source path="Source" />
+	
+	<haxelib name="openfl" />
+	
+</project>
