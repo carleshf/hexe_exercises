@@ -1,4 +1,4 @@
-### Exercise 1: Generate a Procedural Starfield (Basic Procedural Generation)
+### ✅ Exercise 1: Generate a Procedural Starfield (Basic Procedural Generation)
 
 📌 **Goal**: Create a simple procedural starfield, where stars randomly appear on the screen and move downward.
 
@@ -16,7 +16,7 @@
 
 ---
 
-### Exercise 2: Procedural Terrain Generation (Perlin Noise)
+### ✅ Exercise 2: Procedural Terrain Generation (Perlin Noise)
 
 📌 **Goal**: Generate a simple 2D terrain using Perlin noise.
 
@@ -34,7 +34,7 @@
 
 ---
 
-## Exercise 3: Randomized Storytelling Prompts
+## ✅ Exercise 3: Randomized Storytelling Prompts
 
 📌 **Goal**: Create a story prompt generator that procedurally generates small narratives.
 
@@ -52,7 +52,7 @@
 
 ---
 
-### Exercise 4: Procedural Dungeon Room Generator
+### ✅ Exercise 4: Procedural Dungeon Room Generator
 
 📌 **Goal**: Create a randomized dungeon room layout, with obstacles and an exit.
 
@@ -70,7 +70,7 @@
 
 ---
 
-### Exercise 5: Interactive Story with Branching Choices
+### ☐ Exercise 5: Interactive Story with Branching Choices
 
 📌 **Goal**: Build a text-based adventure game where player choices dynamically change the story.
 
