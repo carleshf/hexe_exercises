@@ -891,7 +891,7 @@ ApplicationMain.main = function() {
 };
 ApplicationMain.create = function(config) {
 	var app = new openfl_display_Application();
-	app.meta.h["build"] = "6";
+	app.meta.h["build"] = "9";
 	app.meta.h["company"] = "Company Name";
 	app.meta.h["file"] = "Ex4DungeonGenerator";
 	app.meta.h["name"] = "Ex4DungeonGenerator";
@@ -3369,7 +3369,8 @@ openfl_display_Sprite.prototype = $extend(openfl_display_DisplayObjectContainer.
 var Main = function() {
 	this.GRID_SIZE = 10;
 	openfl_display_Sprite.call(this);
-	this.generateDungeon();
+	this.dungeon = new Dungeon(this.GRID_SIZE);
+	this.pathfinder = new Pathfinder(this.dungeon,40,70);
 	this.drawDungeon();
 	this.createButtons();
 };
@@ -3377,85 +3378,18 @@ $hxClasses["Main"] = Main;
 Main.__name__ = "Main";
 Main.__super__ = openfl_display_Sprite;
 Main.prototype = $extend(openfl_display_Sprite.prototype,{
-	generateDungeon: function() {
-		this.dungeon = [];
-		var _g = 0;
-		var _g1 = this.GRID_SIZE;
-		while(_g < _g1) {
-			var i = _g++;
-			this.dungeon.push([]);
-			var _g2 = 0;
-			var _g3 = this.GRID_SIZE;
-			while(_g2 < _g3) {
-				var j = _g2++;
-				this.dungeon[i].push(0);
-			}
-		}
-		var _g = 0;
-		var _g1 = this.GRID_SIZE;
-		while(_g < _g1) {
-			var i = _g++;
-			var _g2 = 0;
-			var _g3 = this.GRID_SIZE;
-			while(_g2 < _g3) {
-				var j = _g2++;
-				if(Std.random(100) < 20) {
-					this.dungeon[i][j] = 1;
-				}
-			}
-		}
-		this.dungeon[0][0] = 3;
-		this.dungeon[this.GRID_SIZE - 1][this.GRID_SIZE - 1] = 4;
-		this.ensurePath();
-	}
-	,ensurePath: function() {
-		var queue = [{ x : 0, y : 0}];
-		var visited = [];
-		var _g = 0;
-		var _g1 = this.GRID_SIZE;
-		while(_g < _g1) {
-			var i = _g++;
-			visited.push([]);
-			var _g2 = 0;
-			var _g3 = this.GRID_SIZE;
-			while(_g2 < _g3) {
-				var j = _g2++;
-				visited[i].push(false);
-			}
-		}
-		visited[0][0] = true;
-		var directions = [{ x : 0, y : 1},{ x : 1, y : 0},{ x : 0, y : -1},{ x : -1, y : 0}];
-		while(queue.length > 0) {
-			var current = queue.shift();
-			if(current.x == this.GRID_SIZE - 1 && current.y == this.GRID_SIZE - 1) {
-				return;
-			}
-			var _g = 0;
-			while(_g < directions.length) {
-				var dir = directions[_g];
-				++_g;
-				var nx = current.x + dir.x;
-				var ny = current.y + dir.y;
-				if(nx >= 0 && ny >= 0 && nx < this.GRID_SIZE && ny < this.GRID_SIZE) {
-					if(!visited[nx][ny] && this.dungeon[nx][ny] != 1) {
-						visited[nx][ny] = true;
-						queue.push({ x : nx, y : ny});
-					}
-				}
-			}
-		}
-		var _g = 0;
-		var _g1 = this.GRID_SIZE;
-		while(_g < _g1) {
-			var i = _g++;
-			var _g2 = 0;
-			var _g3 = this.GRID_SIZE;
-			while(_g2 < _g3) {
-				var j = _g2++;
-				if(!visited[i][j]) {
-					this.dungeon[i][j] = 0;
-				}
-			}
+	getColor: function(type) {
+		switch(type) {
+		case 0:
+			return 16777215;
+		case 1:
+			return 3355443;
+		case 3:
+			return 65280;
+		case 4:
+			return 16711680;
+		default:
+			return 16777215;
 		}
 	}
 	,drawDungeon: function() {
@@ -3470,7 +3404,7 @@ Main.prototype = $extend(openfl_display_Sprite.prototype,{
 			while(_g2 < _g3) {
 				var j = _g2++;
 				var tile = new openfl_display_Shape();
-				tile.get_graphics().beginFill(this.getColor(this.dungeon[i][j]));
+				tile.get_graphics().beginFill(this.getColor(this.dungeon.getTile(i,j)));
 				tile.get_graphics().drawRect(0,0,40,40);
 				tile.get_graphics().endFill();
 				tile.set_x(i * 40);
@@ -3501,35 +3435,11 @@ Main.prototype = $extend(openfl_display_Sprite.prototype,{
 		if(this.decreaseButton != null) {
 			this.addChild(this.decreaseButton);
 		}
-	}
-	,getColor: function(type) {
-		switch(type) {
-		case 0:
-			return 16777215;
-		case 1:
-			return 3355443;
-		case 3:
-			return 65280;
-		case 4:
-			return 16711680;
-		default:
-			return 16777215;
+		if(this.pathButton != null) {
+			this.addChild(this.pathButton);
 		}
 	}
-	,createButtons: function() {
-		var _gthis = this;
-		this.increaseButton = this.createButton("Increase Grid",20,20);
-		this.decreaseButton = this.createButton("Decrease Grid",200,20);
-		this.increaseButton.addEventListener("click",function(_) {
-			_gthis.adjustGridSize(1);
-		});
-		this.decreaseButton.addEventListener("click",function(_) {
-			_gthis.adjustGridSize(-1);
-		});
-		this.addChild(this.increaseButton);
-		this.addChild(this.decreaseButton);
-	}
-	,createButton: function(label,x,y) {
+	,createButton: function(label,x,y,onClick) {
 		var button = new openfl_display_Sprite();
 		button.get_graphics().beginFill(16761095);
 		button.get_graphics().drawRoundRect(0,0,150,40,10);
@@ -3546,7 +3456,25 @@ Main.prototype = $extend(openfl_display_Sprite.prototype,{
 		button.set_y(y);
 		button.set_buttonMode(true);
 		button.addChild(buttonText);
+		button.addEventListener("click",function(_) {
+			onClick();
+		});
 		return button;
+	}
+	,createButtons: function() {
+		var _gthis = this;
+		this.increaseButton = this.createButton("Increase Grid",20,20,function() {
+			_gthis.adjustGridSize(1);
+		});
+		this.decreaseButton = this.createButton("Decrease Grid",200,20,function() {
+			_gthis.adjustGridSize(-1);
+		});
+		this.pathButton = this.createButton("Find Path",380,20,function() {
+			_gthis.pathfinder.animatePath(_gthis);
+		});
+		this.addChild(this.increaseButton);
+		this.addChild(this.decreaseButton);
+		this.addChild(this.pathButton);
 	}
 	,adjustGridSize: function(change) {
 		var newSize = this.GRID_SIZE + change;
@@ -3554,7 +3482,8 @@ Main.prototype = $extend(openfl_display_Sprite.prototype,{
 			return;
 		}
 		this.GRID_SIZE = newSize;
-		this.generateDungeon();
+		this.dungeon = new Dungeon(this.GRID_SIZE);
+		this.pathfinder = new Pathfinder(this.dungeon,40,70);
 		this.drawDungeon();
 	}
 	,__class__: Main
@@ -3570,6 +3499,84 @@ DocumentClass.__super__ = Main;
 DocumentClass.prototype = $extend(Main.prototype,{
 	__class__: DocumentClass
 });
+var Dungeon = function(size) {
+	this.size = size;
+	this.generateGrid();
+};
+$hxClasses["Dungeon"] = Dungeon;
+Dungeon.__name__ = "Dungeon";
+Dungeon.prototype = {
+	generateGrid: function() {
+		this.grid = [];
+		var _g = 0;
+		var _g1 = this.size;
+		while(_g < _g1) {
+			var i = _g++;
+			this.grid.push([]);
+			var _g2 = 0;
+			var _g3 = this.size;
+			while(_g2 < _g3) {
+				var j = _g2++;
+				this.grid[i].push(Std.random(100) < 20 ? 1 : 0);
+			}
+		}
+		this.grid[0][0] = 3;
+		this.grid[this.size - 1][this.size - 1] = 4;
+		this.ensurePath();
+	}
+	,ensurePath: function() {
+		var queue = [{ x : 0, y : 0}];
+		var visited = [];
+		var _g = 0;
+		var _g1 = this.size;
+		while(_g < _g1) {
+			var i = _g++;
+			visited.push([]);
+			var _g2 = 0;
+			var _g3 = this.size;
+			while(_g2 < _g3) {
+				var j = _g2++;
+				visited[i].push(false);
+			}
+		}
+		visited[0][0] = true;
+		var directions = [{ x : 0, y : 1},{ x : 1, y : 0},{ x : 0, y : -1},{ x : -1, y : 0}];
+		while(queue.length > 0) {
+			var current = queue.shift();
+			if(current.x == this.size - 1 && current.y == this.size - 1) {
+				return;
+			}
+			var _g = 0;
+			while(_g < directions.length) {
+				var dir = directions[_g];
+				++_g;
+				var nx = current.x + dir.x;
+				var ny = current.y + dir.y;
+				if(nx >= 0 && ny >= 0 && nx < this.size && ny < this.size && !visited[nx][ny] && this.grid[nx][ny] != 1) {
+					visited[nx][ny] = true;
+					queue.push({ x : nx, y : ny});
+				}
+			}
+		}
+		var _g = 0;
+		var _g1 = this.size;
+		while(_g < _g1) {
+			var i = _g++;
+			var _g2 = 0;
+			var _g3 = this.size;
+			while(_g2 < _g3) {
+				var j = _g2++;
+				if(!visited[i][j]) {
+					this.grid[i][j] = 0;
+				}
+			}
+		}
+	}
+	,getTile: function(x,y) {
+		return this.grid[x][y];
+	}
+	,__class__: Dungeon
+};
 var EReg = function(r,opt) {
 	this.r = new RegExp(r,opt.split("u").join(""));
 };
@@ -3723,6 +3730,16 @@ Lambda.array = function(it) {
 	}
 	return a;
 };
+Lambda.exists = function(it,f) {
+	var x = $getIterator(it);
+	while(x.hasNext()) {
+		var x1 = x.next();
+		if(f(x1)) {
+			return true;
+		}
+	}
+	return false;
+};
 Lambda.count = function(it,pred) {
 	var n = 0;
 	if(pred == null) {
@@ -3742,7 +3759,132 @@ Lambda.count = function(it,pred) {
 	}
 	return n;
 };
+Lambda.find = function(it,f) {
+	var v = $getIterator(it);
+	while(v.hasNext()) {
+		var v1 = v.next();
+		if(f(v1)) {
+			return v1;
+		}
+	}
+	return null;
+};
 Math.__name__ = "Math";
+var PathNode = function(x,y,g,h,parent) {
+	if(h == null) {
+		h = 0;
+	}
+	if(g == null) {
+		g = 0;
+	}
+	this.x = x;
+	this.y = y;
+	this.g = g;
+	this.h = h;
+	this.f = g + h;
+	this.parent = parent;
+};
+$hxClasses["PathNode"] = PathNode;
+PathNode.__name__ = "PathNode";
+PathNode.prototype = {
+	__class__: PathNode
+};
+var Pathfinder = function(dungeon,tileSize,offsetY) {
+	this.dungeon = dungeon;
+	this.tileSize = tileSize;
+	this.offsetY = offsetY;
+};
+$hxClasses["Pathfinder"] = Pathfinder;
+Pathfinder.__name__ = "Pathfinder";
+Pathfinder.prototype = {
+	findPath: function() {
+		var openList = [];
+		var closedList = [];
+		var start = new PathNode(0,0);
+		var goal = new PathNode(this.dungeon.size - 1,this.dungeon.size - 1);
+		openList.push(start);
+		var directions = [{ x : 0, y : 1},{ x : 1, y : 0},{ x : 0, y : -1},{ x : -1, y : 0}];
+		while(openList.length > 0) {
+			openList.sort((function() {
+				return function(a,b) {
+					return a.f - b.f;
+				};
+			})());
+			var current = openList.shift();
+			if(current.x == goal.x && current.y == goal.y) {
+				var path = [];
+				while(current != null) {
+					path.unshift({ x : current.x, y : current.y});
+					current = current.parent;
+				}
+				return path;
+			}
+			closedList.push({ x : current.x, y : current.y});
+			var _g = 0;
+			while(_g < directions.length) {
+				var dir = directions[_g];
+				++_g;
+				var nx = [current.x + dir.x];
+				var ny = [current.y + dir.y];
+				if(nx[0] >= 0 && ny[0] >= 0 && nx[0] < this.dungeon.size && ny[0] < this.dungeon.size && this.dungeon.getTile(nx[0],ny[0]) != 1) {
+					if(Lambda.exists(closedList,(function(ny,nx) {
+						return function(c) {
+							if(c.x == nx[0]) {
+								return c.y == ny[0];
+							} else {
+								return false;
+							}
+						};
+					})(ny,nx))) {
+						continue;
+					}
+					var g = current.g + 1;
+					var h = Math.abs(goal.x - nx[0]) + Math.abs(goal.y - ny[0]);
+					var f = g + h;
+					var existing = Lambda.find(openList,(function(ny,nx) {
+						return function(n) {
+							if(n.x == nx[0]) {
+								return n.y == ny[0];
+							} else {
+								return false;
+							}
+						};
+					})(ny,nx));
+					if(existing == null || g < existing.g) {
+						openList.push(new PathNode(nx[0],ny[0],g,h | 0,current));
+					}
+				}
+			}
+		}
+		return [];
+	}
+	,animatePath: function(parent) {
+		var _gthis = this;
+		var path = this.findPath();
+		if(path.length == 0) {
+			return;
+		}
+		var delay = 200;
+		var _g = 0;
+		var _g1 = path.length;
+		while(_g < _g1) {
+			var i = _g++;
+			var step = [path[i]];
+			haxe_Timer.delay((function(step) {
+				return function() {
+					var tile = new openfl_display_Shape();
+					tile.get_graphics().beginFill(65535);
+					tile.get_graphics().drawRect(0,0,_gthis.tileSize,_gthis.tileSize);
+					tile.get_graphics().endFill();
+					tile.set_x(step[0].x * _gthis.tileSize);
+					tile.set_y(step[0].y * _gthis.tileSize + _gthis.offsetY);
+					parent.addChild(tile);
+				};
+			})(step),i * delay | 0);
+		}
+	}
+	,__class__: Pathfinder
+};
 var Reflect = function() { };
 $hxClasses["Reflect"] = Reflect;
 Reflect.__name__ = "Reflect";
@@ -24815,7 +24957,7 @@ var lime_utils_AssetCache = function() {
 	this.audio = new haxe_ds_StringMap();
 	this.font = new haxe_ds_StringMap();
 	this.image = new haxe_ds_StringMap();
-	this.version = 178601;
+	this.version = 893448;
 };
 $hxClasses["lime.utils.AssetCache"] = lime_utils_AssetCache;
 lime_utils_AssetCache.__name__ = "lime.utils.AssetCache";
