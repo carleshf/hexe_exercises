@@ -13,6 +13,7 @@
     Create an array of stars, each with a random (x, y) position.
     Every frame, move the stars downward.
     When a star reaches the bottom, move it back to the top with a new random x position.
+
 ---
 
 ### Exercise 2: Procedural Terrain Generation (Perlin Noise)

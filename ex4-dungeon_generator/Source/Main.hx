@@ -16,6 +16,8 @@ class Main extends Sprite {
     var decreaseButton:Sprite;
     var pathButton:Sprite;
 
+    var addItemsButton:Sprite;
+
     public function new() {
         super();
         dungeon = new Dungeon(GRID_SIZE);
@@ -24,7 +26,7 @@ class Main extends Sprite {
         createButtons();
     }
 
-    function getColor(type:Int):UInt {
+    /*function getColor(type:Int):UInt {
         return switch (type) {
             case 0: 0xFFFFFF;
             case 1: 0x333333;
@@ -32,42 +34,43 @@ class Main extends Sprite {
             case 4: 0xFF0000;
             default: 0xFFFFFF;
         }
+    }*/
+
+    function getEmoji(type:Int):String {
+        return switch (type) {
+            case Dungeon.EMPTY: "⬜";
+            case Dungeon.WALL: "⬛";
+            case Dungeon.START: "🚪";
+            case Dungeon.EXIT: "🏁";
+            case Dungeon.TRAP: "⚠️";
+            case Dungeon.COIN: "🪙";
+            case Dungeon.GEM: "💎";
+            default: "⬜";
+        }
     }
 
     function drawDungeon():Void {
         this.removeChildren();
-
-        // this should go to dungeon class
         var offsetY = 70;
+    
         for (i in 0...GRID_SIZE) {
             for (j in 0...GRID_SIZE) {
-                var tile = new Shape();
-                tile.graphics.beginFill(getColor(dungeon.getTile(i, j)));
-                tile.graphics.drawRect(0, 0, TILE_SIZE, TILE_SIZE);
-                tile.graphics.endFill();
-                tile.x = i * TILE_SIZE;
-                tile.y = j * TILE_SIZE + offsetY;
-                addChild(tile);
+                var tileText = new TextField();
+                tileText.defaultTextFormat = new TextFormat("_sans", 30, 0x000000, true);
+                tileText.text = getEmoji(dungeon.getTile(i, j));
+                tileText.width = TILE_SIZE;
+                tileText.height = TILE_SIZE;
+                tileText.x = i * TILE_SIZE;
+                tileText.y = j * TILE_SIZE + offsetY;
+                tileText.selectable = false;
+                addChild(tileText);
             }
         }
-
-        // Draw grid (restored from previous version)
-		var grid = new Shape();
-		grid.graphics.lineStyle(1, 0x000000, 0.5);
-		
-		for (i in 0...GRID_SIZE + 1) {
-			grid.graphics.moveTo(i * TILE_SIZE, offsetY);
-			grid.graphics.lineTo(i * TILE_SIZE, GRID_SIZE * TILE_SIZE + offsetY);
-		}
-		for (j in 0...GRID_SIZE + 1) {
-			grid.graphics.moveTo(0, j * TILE_SIZE + offsetY);
-			grid.graphics.lineTo(GRID_SIZE * TILE_SIZE, j * TILE_SIZE + offsetY);
-		}
-		addChild(grid);
-
+    
         if (increaseButton != null) addChild(increaseButton);
         if (decreaseButton != null) addChild(decreaseButton);
         if (pathButton != null) addChild(pathButton);
+        if (addItemsButton != null) addChild(addItemsButton);
     }
 
     function createButton(label:String, x:Float, y:Float, onClick:Void->Void):Sprite {
@@ -98,10 +101,15 @@ class Main extends Sprite {
     function createButtons():Void {
         increaseButton = createButton("Increase Grid", 20, 20, () -> adjustGridSize(1));
         decreaseButton = createButton("Decrease Grid", 200, 20, () -> adjustGridSize(-1));
-        pathButton = createButton("Find Path", 380, 20, () -> pathfinder.animatePath(this));
+        addItemsButton = createButton("Add Items", 380, 20, () -> {
+            dungeon.addItems();
+            drawDungeon();
+        });
+        pathButton = createButton("Find Path", 560, 20, () -> pathfinder.animatePath(this));
 
         addChild(increaseButton);
         addChild(decreaseButton);
+        addChild(addItemsButton);
         addChild(pathButton);
     }
 

@@ -891,7 +891,7 @@ ApplicationMain.main = function() {
 };
 ApplicationMain.create = function(config) {
 	var app = new openfl_display_Application();
-	app.meta.h["build"] = "9";
+	app.meta.h["build"] = "10";
 	app.meta.h["company"] = "Company Name";
 	app.meta.h["file"] = "Ex4DungeonGenerator";
 	app.meta.h["name"] = "Ex4DungeonGenerator";
@@ -3378,18 +3378,24 @@ $hxClasses["Main"] = Main;
 Main.__name__ = "Main";
 Main.__super__ = openfl_display_Sprite;
 Main.prototype = $extend(openfl_display_Sprite.prototype,{
-	getColor: function(type) {
+	getEmoji: function(type) {
 		switch(type) {
 		case 0:
-			return 16777215;
+			return "⬜";
 		case 1:
-			return 3355443;
+			return "⬛";
 		case 3:
-			return 65280;
+			return "🚪";
 		case 4:
-			return 16711680;
+			return "🏁";
+		case 5:
+			return "⚠️";
+		case 6:
+			return "🪙";
+		case 7:
+			return "💎";
 		default:
-			return 16777215;
+			return "⬜";
 		}
 	}
 	,drawDungeon: function() {
@@ -3403,32 +3409,17 @@ Main.prototype = $extend(openfl_display_Sprite.prototype,{
 			var _g3 = this.GRID_SIZE;
 			while(_g2 < _g3) {
 				var j = _g2++;
-				var tile = new openfl_display_Shape();
-				tile.get_graphics().beginFill(this.getColor(this.dungeon.getTile(i,j)));
-				tile.get_graphics().drawRect(0,0,40,40);
-				tile.get_graphics().endFill();
-				tile.set_x(i * 40);
-				tile.set_y(j * 40 + offsetY);
-				this.addChild(tile);
+				var tileText = new openfl_text_TextField();
+				tileText.set_defaultTextFormat(new openfl_text_TextFormat("_sans",30,0,true));
+				tileText.set_text(this.getEmoji(this.dungeon.getTile(i,j)));
+				tileText.set_width(40);
+				tileText.set_height(40);
+				tileText.set_x(i * 40);
+				tileText.set_y(j * 40 + offsetY);
+				tileText.set_selectable(false);
+				this.addChild(tileText);
 			}
 		}
-		var grid = new openfl_display_Shape();
-		grid.get_graphics().lineStyle(1,0,0.5);
-		var _g = 0;
-		var _g1 = this.GRID_SIZE + 1;
-		while(_g < _g1) {
-			var i = _g++;
-			grid.get_graphics().moveTo(i * 40,offsetY);
-			grid.get_graphics().lineTo(i * 40,this.GRID_SIZE * 40 + offsetY);
-		}
-		var _g = 0;
-		var _g1 = this.GRID_SIZE + 1;
-		while(_g < _g1) {
-			var j = _g++;
-			grid.get_graphics().moveTo(0,j * 40 + offsetY);
-			grid.get_graphics().lineTo(this.GRID_SIZE * 40,j * 40 + offsetY);
-		}
-		this.addChild(grid);
 		if(this.increaseButton != null) {
 			this.addChild(this.increaseButton);
 		}
@@ -3437,6 +3428,9 @@ Main.prototype = $extend(openfl_display_Sprite.prototype,{
 		}
 		if(this.pathButton != null) {
 			this.addChild(this.pathButton);
+		}
+		if(this.addItemsButton != null) {
+			this.addChild(this.addItemsButton);
 		}
 	}
 	,createButton: function(label,x,y,onClick) {
@@ -3469,11 +3463,16 @@ Main.prototype = $extend(openfl_display_Sprite.prototype,{
 		this.decreaseButton = this.createButton("Decrease Grid",200,20,function() {
 			_gthis.adjustGridSize(-1);
 		});
-		this.pathButton = this.createButton("Find Path",380,20,function() {
+		this.addItemsButton = this.createButton("Add Items",380,20,function() {
+			_gthis.dungeon.addItems();
+			_gthis.drawDungeon();
+		});
+		this.pathButton = this.createButton("Find Path",560,20,function() {
 			_gthis.pathfinder.animatePath(_gthis);
 		});
 		this.addChild(this.increaseButton);
 		this.addChild(this.decreaseButton);
+		this.addChild(this.addItemsButton);
 		this.addChild(this.pathButton);
 	}
 	,adjustGridSize: function(change) {
@@ -3524,6 +3523,31 @@ Dungeon.prototype = {
 		this.grid[this.size - 1][this.size - 1] = 4;
 		this.ensurePath();
 	}
+	,addItems: function() {
+		var _g = 0;
+		var _g1 = this.size;
+		while(_g < _g1) {
+			var i = _g++;
+			var _g2 = 0;
+			var _g3 = this.size;
+			while(_g2 < _g3) {
+				var j = _g2++;
+				if(this.grid[i][j] == 0) {
+					var rand = Std.random(100);
+					if(rand < 10) {
+						this.grid[i][j] = 5;
+					} else if(rand < 20) {
+						this.grid[i][j] = 6;
+					} else if(rand < 25) {
+						this.grid[i][j] = 7;
+					}
+				}
+			}
+		}
+	}
+	,getTile: function(x,y) {
+		return this.grid[x][y];
+	}
 	,ensurePath: function() {
 		var queue = [{ x : 0, y : 0}];
 		var visited = [];
@@ -3571,9 +3595,6 @@ Dungeon.prototype = {
 				}
 			}
 		}
-	}
-	,getTile: function(x,y) {
-		return this.grid[x][y];
 	}
 	,__class__: Dungeon
 };
@@ -24957,7 +24978,7 @@ var lime_utils_AssetCache = function() {
 	this.audio = new haxe_ds_StringMap();
 	this.font = new haxe_ds_StringMap();
 	this.image = new haxe_ds_StringMap();
-	this.version = 893448;
+	this.version = 815689;
 };
 $hxClasses["lime.utils.AssetCache"] = lime_utils_AssetCache;
 lime_utils_AssetCache.__name__ = "lime.utils.AssetCache";
@@ -78087,6 +78108,13 @@ openfl_display_DisplayObject.__tempStack = new lime_utils_ObjectPool(function() 
 	stack.set_length(0);
 });
 Main.TILE_SIZE = 40;
+Dungeon.EMPTY = 0;
+Dungeon.WALL = 1;
+Dungeon.START = 3;
+Dungeon.EXIT = 4;
+Dungeon.TRAP = 5;
+Dungeon.COIN = 6;
+Dungeon.GEM = 7;
 Xml.Element = 0;
 Xml.PCData = 1;
 Xml.CData = 2;

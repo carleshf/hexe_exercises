@@ -4,6 +4,14 @@ class Dungeon {
     public var size:Int;
     public var grid:Array<Array<Int>>;
 
+    public static inline var EMPTY:Int = 0;
+    public static inline var WALL:Int = 1;
+    public static inline var START:Int = 3;
+    public static inline var EXIT:Int = 4;
+    public static inline var TRAP:Int = 5;
+    public static inline var COIN:Int = 6;
+    public static inline var GEM:Int = 7;
+
     public function new(size:Int) {
         this.size = size;
         generateGrid();
@@ -14,12 +22,29 @@ class Dungeon {
         for (i in 0...size) {
             grid.push([]);
             for (j in 0...size) {
-                grid[i].push(Std.random(100) < 20 ? 1 : 0); // 20% chance for walls
+                grid[i].push(Std.random(100) < 20 ? WALL : EMPTY);
             }
         }
-        grid[0][0] = 3; // Start position
-        grid[size - 1][size - 1] = 4; // Exit
+        grid[0][0] = START;
+        grid[size - 1][size - 1] = EXIT;
         ensurePath();
+    }
+
+    public function addItems():Void {
+        for (i in 0...size) {
+            for (j in 0...size) {
+                if (grid[i][j] == EMPTY) {
+                    var rand = Std.random(100);
+                    if (rand < 10) grid[i][j] = TRAP;
+                    else if (rand < 20) grid[i][j] = COIN;
+                    else if (rand < 25) grid[i][j] = GEM;
+                }
+            }
+        }
+    }
+
+    public function getTile(x:Int, y:Int):Int {
+        return grid[x][y];
     }
 
     function ensurePath():Void {
@@ -54,9 +79,5 @@ class Dungeon {
                 if (!visited[i][j]) grid[i][j] = 0;
             }
         }
-    }
-
-    public function getTile(x:Int, y:Int):Int {
-        return grid[x][y];
     }
 }
