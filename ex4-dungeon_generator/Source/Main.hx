@@ -15,15 +15,25 @@ class Main extends Sprite {
     var increaseButton:Sprite;
     var decreaseButton:Sprite;
     var pathButton:Sprite;
+    var safePathButton:Sprite;
 
     var addItemsButton:Sprite;
+
+    public var coinsCollected:Int = 0; //should encapsulate this
+    public var gemsCollected:Int = 0;
+    public var trapsTriggered:Int = 0;
+    public var coinText:TextField; // should be updated in main and not in dungeon
+    public var gemText:TextField;
+    public var trapText:TextField;
+
 
     public function new() {
         super();
         dungeon = new Dungeon(GRID_SIZE);
-        pathfinder = new Pathfinder(dungeon, TILE_SIZE, 70);
+        pathfinder = new Pathfinder(dungeon, TILE_SIZE, 100);
         drawDungeon();
         createButtons();
+        createHUD();
     }
 
     /*function getColor(type:Int):UInt {
@@ -49,9 +59,10 @@ class Main extends Sprite {
         }
     }
 
+    // this should go in Dungeon
     function drawDungeon():Void {
         this.removeChildren();
-        var offsetY = 70;
+        var offsetY = 100;
     
         for (i in 0...GRID_SIZE) {
             for (j in 0...GRID_SIZE) {
@@ -69,8 +80,13 @@ class Main extends Sprite {
     
         if (increaseButton != null) addChild(increaseButton);
         if (decreaseButton != null) addChild(decreaseButton);
-        if (pathButton != null) addChild(pathButton);
         if (addItemsButton != null) addChild(addItemsButton);
+        if (pathButton != null) addChild(pathButton);
+        if (safePathButton != null) addChild(safePathButton);
+
+        if (coinText != null) addChild(coinText);
+        if (gemText != null) addChild(gemText);
+        if (trapText != null) addChild(trapText);
     }
 
     function createButton(label:String, x:Float, y:Float, onClick:Void->Void):Sprite {
@@ -105,12 +121,24 @@ class Main extends Sprite {
             dungeon.addItems();
             drawDungeon();
         });
-        pathButton = createButton("Find Path", 560, 20, () -> pathfinder.animatePath(this));
+        pathButton = createButton("Find Path", 560, 20, () -> {
+            this.coinsCollected = 0;
+            this.gemsCollected = 0;
+            this.trapsTriggered = 0;
+            pathfinder.animateShortesPath(this);
+        });
+        safePathButton = createButton("Find Safest Path", 740, 20, () -> {
+            this.coinsCollected = 0;
+            this.gemsCollected = 0;
+            this.trapsTriggered = 0;
+            pathfinder.animateSafePath(this);
+        });
 
         addChild(increaseButton);
         addChild(decreaseButton);
         addChild(addItemsButton);
         addChild(pathButton);
+        addChild(safePathButton);
     }
 
     function adjustGridSize(change:Int):Void {
@@ -120,8 +148,28 @@ class Main extends Sprite {
         
         // Regenerate dungeon and redraw
         dungeon = new Dungeon(GRID_SIZE);
-        pathfinder = new Pathfinder(dungeon, TILE_SIZE, 70);
+        pathfinder = new Pathfinder(dungeon, TILE_SIZE, 100);
         drawDungeon();
     }
     
+    function createHUD():Void {
+        coinText = createStatText("Coins: 0", 20, 70);
+        gemText = createStatText("Gems: 0", 200, 70);
+        trapText = createStatText("Traps: 0", 380, 70);
+        
+        addChild(coinText);
+        addChild(gemText);
+        addChild(trapText);
+    }
+
+    function createStatText(label:String, x:Float, y:Float):TextField {
+        var text = new TextField();
+        text.defaultTextFormat = new TextFormat("_sans", 18, 0x000000, true);
+        text.text = label;
+        text.width = 150;
+        text.height = 30;
+        text.x = x;
+        text.y = y;
+        return text;
+    }
 }

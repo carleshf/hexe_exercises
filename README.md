@@ -70,7 +70,7 @@
 
 ---
 
-### ☐ Exercise 5: Interactive Story with Branching Choices
+### ✅ Exercise 5: Interactive Story with Branching Choices
 
 📌 **Goal**: Build a text-based adventure game where player choices dynamically change the story.
 

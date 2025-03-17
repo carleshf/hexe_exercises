@@ -891,7 +891,7 @@ ApplicationMain.main = function() {
 };
 ApplicationMain.create = function(config) {
 	var app = new openfl_display_Application();
-	app.meta.h["build"] = "10";
+	app.meta.h["build"] = "11";
 	app.meta.h["company"] = "Company Name";
 	app.meta.h["file"] = "Ex4DungeonGenerator";
 	app.meta.h["name"] = "Ex4DungeonGenerator";
@@ -3367,12 +3367,16 @@ openfl_display_Sprite.prototype = $extend(openfl_display_DisplayObjectContainer.
 	,__properties__: $extend(openfl_display_DisplayObjectContainer.prototype.__properties__,{get_graphics:"get_graphics",set_buttonMode:"set_buttonMode",get_buttonMode:"get_buttonMode"})
 });
 var Main = function() {
+	this.trapsTriggered = 0;
+	this.gemsCollected = 0;
+	this.coinsCollected = 0;
 	this.GRID_SIZE = 10;
 	openfl_display_Sprite.call(this);
 	this.dungeon = new Dungeon(this.GRID_SIZE);
-	this.pathfinder = new Pathfinder(this.dungeon,40,70);
+	this.pathfinder = new Pathfinder(this.dungeon,40,100);
 	this.drawDungeon();
 	this.createButtons();
+	this.createHUD();
 };
 $hxClasses["Main"] = Main;
 Main.__name__ = "Main";
@@ -3400,7 +3404,7 @@ Main.prototype = $extend(openfl_display_Sprite.prototype,{
 	}
 	,drawDungeon: function() {
 		this.removeChildren();
-		var offsetY = 70;
+		var offsetY = 100;
 		var _g = 0;
 		var _g1 = this.GRID_SIZE;
 		while(_g < _g1) {
@@ -3426,11 +3430,23 @@ Main.prototype = $extend(openfl_display_Sprite.prototype,{
 		if(this.decreaseButton != null) {
 			this.addChild(this.decreaseButton);
 		}
+		if(this.addItemsButton != null) {
+			this.addChild(this.addItemsButton);
+		}
 		if(this.pathButton != null) {
 			this.addChild(this.pathButton);
 		}
-		if(this.addItemsButton != null) {
-			this.addChild(this.addItemsButton);
+		if(this.safePathButton != null) {
+			this.addChild(this.safePathButton);
+		}
+		if(this.coinText != null) {
+			this.addChild(this.coinText);
+		}
+		if(this.gemText != null) {
+			this.addChild(this.gemText);
+		}
+		if(this.trapText != null) {
+			this.addChild(this.trapText);
 		}
 	}
 	,createButton: function(label,x,y,onClick) {
@@ -3468,12 +3484,22 @@ Main.prototype = $extend(openfl_display_Sprite.prototype,{
 			_gthis.drawDungeon();
 		});
 		this.pathButton = this.createButton("Find Path",560,20,function() {
-			_gthis.pathfinder.animatePath(_gthis);
+			_gthis.coinsCollected = 0;
+			_gthis.gemsCollected = 0;
+			_gthis.trapsTriggered = 0;
+			_gthis.pathfinder.animateShortesPath(_gthis);
+		});
+		this.safePathButton = this.createButton("Find Safest Path",740,20,function() {
+			_gthis.coinsCollected = 0;
+			_gthis.gemsCollected = 0;
+			_gthis.trapsTriggered = 0;
+			_gthis.pathfinder.animateSafePath(_gthis);
 		});
 		this.addChild(this.increaseButton);
 		this.addChild(this.decreaseButton);
 		this.addChild(this.addItemsButton);
 		this.addChild(this.pathButton);
+		this.addChild(this.safePathButton);
 	}
 	,adjustGridSize: function(change) {
 		var newSize = this.GRID_SIZE + change;
@@ -3482,8 +3508,26 @@ Main.prototype = $extend(openfl_display_Sprite.prototype,{
 		}
 		this.GRID_SIZE = newSize;
 		this.dungeon = new Dungeon(this.GRID_SIZE);
-		this.pathfinder = new Pathfinder(this.dungeon,40,70);
+		this.pathfinder = new Pathfinder(this.dungeon,40,100);
 		this.drawDungeon();
+	}
+	,createHUD: function() {
+		this.coinText = this.createStatText("Coins: 0",20,70);
+		this.gemText = this.createStatText("Gems: 0",200,70);
+		this.trapText = this.createStatText("Traps: 0",380,70);
+		this.addChild(this.coinText);
+		this.addChild(this.gemText);
+		this.addChild(this.trapText);
+	}
+	,createStatText: function(label,x,y) {
+		var text = new openfl_text_TextField();
+		text.set_defaultTextFormat(new openfl_text_TextFormat("_sans",18,0,true));
+		text.set_text(label);
+		text.set_width(150);
+		text.set_height(30);
+		text.set_x(x);
+		text.set_y(y);
+		return text;
 	}
 	,__class__: Main
 });
@@ -3879,9 +3923,85 @@ Pathfinder.prototype = {
 		}
 		return [];
 	}
-	,animatePath: function(parent) {
-		var _gthis = this;
+	,findSafestPath: function() {
+		var openList = [];
+		var closedList = [];
+		var start = new PathNode(0,0);
+		var goal = new PathNode(this.dungeon.size - 1,this.dungeon.size - 1);
+		openList.push(start);
+		var directions = [{ x : 0, y : 1},{ x : 1, y : 0},{ x : 0, y : -1},{ x : -1, y : 0}];
+		while(openList.length > 0) {
+			openList.sort((function() {
+				return function(a,b) {
+					return a.f - b.f;
+				};
+			})());
+			var current = openList.shift();
+			if(current.x == goal.x && current.y == goal.y) {
+				var path = [];
+				while(current != null) {
+					path.unshift({ x : current.x, y : current.y});
+					current = current.parent;
+				}
+				return path;
+			}
+			closedList.push({ x : current.x, y : current.y});
+			var _g = 0;
+			while(_g < directions.length) {
+				var dir = directions[_g];
+				++_g;
+				var nx = [current.x + dir.x];
+				var ny = [current.y + dir.y];
+				if(nx[0] >= 0 && ny[0] >= 0 && nx[0] < this.dungeon.size && ny[0] < this.dungeon.size && this.dungeon.getTile(nx[0],ny[0]) != 1) {
+					if(Lambda.exists(closedList,(function(ny,nx) {
+						return function(c) {
+							if(c.x == nx[0]) {
+								return c.y == ny[0];
+							} else {
+								return false;
+							}
+						};
+					})(ny,nx))) {
+						continue;
+					}
+					var tileType = this.dungeon.getTile(nx[0],ny[0]);
+					var g = current.g + 1;
+					if(tileType == 5) {
+						g += 10;
+					} else if(tileType == 6) {
+						g -= 2;
+					} else if(tileType == 7) {
+						g -= 4;
+					}
+					var h = Math.abs(goal.x - nx[0]) + Math.abs(goal.y - ny[0]);
+					var f = g + h;
+					var existing = Lambda.find(openList,(function(ny,nx) {
+						return function(n) {
+							if(n.x == nx[0]) {
+								return n.y == ny[0];
+							} else {
+								return false;
+							}
+						};
+					})(ny,nx));
+					if(existing == null || g < existing.g) {
+						openList.push(new PathNode(nx[0],ny[0],g,h | 0,current));
+					}
+				}
+			}
+		}
+		return [];
+	}
+	,animateShortesPath: function(main) {
 		var path = this.findPath();
+		this.animatePathOnGrid(main,path,16711680);
+	}
+	,animateSafePath: function(main) {
+		var path = this.findSafestPath();
+		this.animatePathOnGrid(main,path,65280);
+	}
+	,animatePathOnGrid: function(main,path,color) {
+		var _gthis = this;
 		if(path.length == 0) {
 			return;
 		}
@@ -3893,13 +4013,26 @@ Pathfinder.prototype = {
 			var step = [path[i]];
 			haxe_Timer.delay((function(step) {
 				return function() {
-					var tile = new openfl_display_Shape();
-					tile.get_graphics().beginFill(65535);
-					tile.get_graphics().drawRect(0,0,_gthis.tileSize,_gthis.tileSize);
-					tile.get_graphics().endFill();
-					tile.set_x(step[0].x * _gthis.tileSize);
-					tile.set_y(step[0].y * _gthis.tileSize + _gthis.offsetY);
-					parent.addChild(tile);
+					var tileType = _gthis.dungeon.getTile(step[0].x,step[0].y);
+					if(tileType == 6) {
+						main.coinsCollected++;
+					}
+					if(tileType == 7) {
+						main.gemsCollected++;
+					}
+					if(tileType == 5) {
+						main.trapsTriggered++;
+					}
+					main.coinText.set_text("Coins: " + main.coinsCollected);
+					main.gemText.set_text("Gems: " + main.gemsCollected);
+					main.trapText.set_text("Traps: " + main.trapsTriggered);
+					var overlay = new openfl_display_Shape();
+					overlay.get_graphics().beginFill(color,0.5);
+					overlay.get_graphics().drawRect(0,0,_gthis.tileSize,_gthis.tileSize);
+					overlay.get_graphics().endFill();
+					overlay.set_x(step[0].x * _gthis.tileSize);
+					overlay.set_y(step[0].y * _gthis.tileSize + _gthis.offsetY);
+					main.addChild(overlay);
 				};
 			})(step),i * delay | 0);
 		}
@@ -24978,7 +25111,7 @@ var lime_utils_AssetCache = function() {
 	this.audio = new haxe_ds_StringMap();
 	this.font = new haxe_ds_StringMap();
 	this.image = new haxe_ds_StringMap();
-	this.version = 815689;
+	this.version = 334511;
 };
 $hxClasses["lime.utils.AssetCache"] = lime_utils_AssetCache;
 lime_utils_AssetCache.__name__ = "lime.utils.AssetCache";
