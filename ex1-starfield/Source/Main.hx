@@ -9,14 +9,14 @@ class Main extends Sprite {
     var stars:Array<Shape>; // Array to store stars
     var numStars:Int = 100; // Number of stars
 
-	public function new() {
-		super();
-		stars = [];
+    public function new() {
+        super();
+        stars = [];
         createStars();
         addEventListener(Event.ENTER_FRAME, update);
-	}
+    }
 
-	function createStars():Void {
+    function createStars():Void {
         for (i in 0...numStars) {
             var star = new Shape();
             star.graphics.beginFill(0x7BC8D6); // White stars
@@ -31,7 +31,7 @@ class Main extends Sprite {
         }
     }
 
-	function update(event:Event):Void {
+    function update(event:Event):Void {
         for (star in stars) {
             star.y += 2; // Move stars downward
 
